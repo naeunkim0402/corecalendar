@@ -269,10 +269,7 @@ export default function TimetablePage() {
                 </svg>
               </button>
               <h2 className="text-[18px] font-bold text-[#191f28] tabular-nums tracking-tight whitespace-nowrap">
-                {weekInfo.year}년 {weekInfo.month}월 {weekInfo.weekOfMonth}주차{" "}
-                <span className="text-[14px] font-semibold text-[#8b95a1]">
-                  {weekInfo.mondayMonth}/{weekInfo.mondayDate}~{weekInfo.fridayMonth}/{weekInfo.fridayDate}
-                </span>
+                {weekInfo.year}년 {weekInfo.month}월 {weekInfo.weekOfMonth}주차
               </h2>
               <button
                 onClick={() => setWeekOffset((v) => v + 1)}
@@ -285,7 +282,6 @@ export default function TimetablePage() {
               </button>
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="sm" onClick={() => reset()}>초기화</Button>
               <button
                 onClick={() => setShowAddModal(true)}
                 className="inline-flex items-center h-9 px-4 bg-white text-[#191f28] text-[13px] font-bold rounded-[8px] border border-[#e5e8eb] hover:bg-[#f9fafb] transition-colors duration-150"
@@ -370,7 +366,7 @@ export default function TimetablePage() {
           <div className="bg-white rounded-[16px] border border-[#e5e8eb] p-6 select-none">
             {/* 요일 헤더 */}
             <div className="grid grid-cols-[56px_repeat(5,1fr)]">
-              <div className="border-b border-[#e5e8eb]" />
+              <div />
               {DAYS.map((day, i) => (
                 <div key={i} className="text-center py-2.5 border-b border-l border-[#e5e8eb]">
                   <span className="text-[12px] font-bold text-[#191f28]">{day}</span>
@@ -393,7 +389,7 @@ export default function TimetablePage() {
                   return (
                     <div key={`row-${hour}`} className="contents">
                       {/* 시간 라벨 */}
-                      <div className={`relative h-[44px] border-t border-[#e5e8eb] ${offHour ? "opacity-30" : ""}`}>
+                      <div className={`relative h-[44px] ${offHour ? "opacity-30" : ""}`}>
                         <span className="absolute -top-[7px] right-3 text-[11px] text-[#8b95a1] tabular-nums tracking-tight font-medium leading-none">
                           {formatHour(hour)}
                         </span>

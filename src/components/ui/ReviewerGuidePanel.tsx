@@ -14,7 +14,7 @@ export function ReviewerGuidePanel() {
         <div className="mb-7">
           <h4 className="text-[14px] font-bold text-white flex items-center gap-2 mb-3">
             <span className="text-[16px]">📋</span>
-            채점관 데모 가이드
+            담당자 데모 가이드
           </h4>
           <p className="text-[11px] text-white/50 leading-[1.7]">
             Corecalendar가 메신저 핑퐁과 조율 노동을 어떻게 원천 소멸시키는지 아래 시나리오대로 원클릭 검증해 보세요.

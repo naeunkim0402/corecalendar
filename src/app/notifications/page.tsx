@@ -8,22 +8,21 @@ import { AppShell } from "@/components/ui";
 import { PEOPLE } from "@/lib/data";
 import { useMeetings, type ConfirmedMeeting } from "@/lib/store";
 
-const DAY_LABELS = ["월", "화", "수", "목", "금"];
+const DAY_LABELS_FULL = ["일", "월", "화", "수", "목", "금", "토"];
 
-// ── 고정 예시 데이터 (회의가 없을 때 보여줄 데모 카드) ──
-const DEMO_NOTIFICATION = {
-  id: "demo-1",
-  title: "스프린트 킥오프",
-  day: 2,
-  hour: 10,
-  label: "수요일 7/16 · 10:00 – 11:00",
-  organizer: { name: "한소영", role: "PM · 주최자" },
-  matchScore: 85,
-};
+function getTodayInfo() {
+  const now = new Date();
+  return {
+    dayLabel: DAY_LABELS_FULL[now.getDay()],
+    month: now.getMonth() + 1,
+    date: now.getDate(),
+  };
+}
 
 export default function NotificationsPage() {
   const { meetings, respondToMeeting, loaded } = useMeetings();
   const [demoResponded, setDemoResponded] = useState<"accepted" | "rejected" | null>(null);
+  const today = getTodayInfo();
 
   const pendingMeetings = meetings.filter((m) => m.status === "pending");
   const resolvedMeetings = meetings.filter((m) => m.status === "approved" || m.status === "rejected");
@@ -79,7 +78,7 @@ export default function NotificationsPage() {
 
                         {/* 날짜 / 시간 */}
                         <span className="text-[13px] text-[#6b7684] tabular-nums shrink-0">
-                          {DAY_LABELS[m.day]}요일 7/{14 + m.day}
+                          {today.dayLabel}요일 {today.month}/{today.date}
                         </span>
                         <span className="text-[13px] font-semibold text-[#191f28] tabular-nums shrink-0">
                           {m.hour}:00 – {m.hour + 1}:00
@@ -156,7 +155,7 @@ export default function NotificationsPage() {
                         </span>
                         <span className="text-[14px] font-bold text-[#191f28]">{m.title}</span>
                         <span className="text-[13px] text-[#6b7684] tabular-nums">
-                          {DAY_LABELS[m.day]}요일 7/{14 + m.day}
+                          {today.dayLabel}요일 {today.month}/{today.date}
                         </span>
                         <span className="text-[13px] font-semibold text-[#191f28] tabular-nums">
                           {m.hour}:00 – {m.hour + 1}:00
@@ -205,14 +204,14 @@ export default function NotificationsPage() {
                 </span>
 
                 {/* 회의 제목 */}
-                <span className="text-[14px] font-bold text-[#191f28] shrink-0">{DEMO_NOTIFICATION.title}</span>
+                <span className="text-[14px] font-bold text-[#191f28] shrink-0">스프린트 킥오프</span>
 
-                {/* 날짜 / 시간 */}
+                {/* 날짜 / 시간 — 항상 오늘 날짜 */}
                 <span className="text-[13px] text-[#6b7684] tabular-nums shrink-0">
-                  {DAY_LABELS[DEMO_NOTIFICATION.day]}요일 7/{14 + DEMO_NOTIFICATION.day}
+                  {today.dayLabel}요일 {today.month}/{today.date}
                 </span>
                 <span className="text-[13px] font-semibold text-[#191f28] tabular-nums shrink-0">
-                  {DEMO_NOTIFICATION.hour}:00 – {DEMO_NOTIFICATION.hour + 1}:00
+                  10:00 – 11:00
                 </span>
 
                 {/* 주최자 */}
@@ -221,7 +220,7 @@ export default function NotificationsPage() {
                     소
                   </div>
                   <span className="text-[12px] text-[#8b95a1]">
-                    {DEMO_NOTIFICATION.organizer.name} · {DEMO_NOTIFICATION.organizer.role}
+                    한소영 · PM · 주최자
                   </span>
                 </div>
 

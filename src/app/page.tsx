@@ -31,10 +31,10 @@ function DeleteConfirmModal({
 }) {
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center backdrop-blur-sm bg-black/40">
-      <div className="bg-white rounded-[16px] p-7 shadow-modal w-[400px] max-w-[90vw]">
+      <div className="bg-white rounded-[16px] pt-7 px-7 pb-6 shadow-modal w-[400px] max-w-[90vw]">
         <div className="flex items-start justify-between mb-6">
           <h3 className="text-[17px] font-bold text-graphite">회의 일정을 삭제할까요?</h3>
-          <button onClick={onClose} className="text-silver hover:text-slate transition-colors duration-150 p-1 rounded-full hover:bg-mist">
+          <button onClick={onClose} className="text-stone hover:text-graphite transition-colors duration-150 p-1 rounded-full hover:bg-mist">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
               <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
             </svg>
@@ -70,10 +70,10 @@ function OnboardingModal({ onComplete }: { onComplete: () => void }) {
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center backdrop-blur-sm bg-black/40">
-      <div className="bg-white rounded-[16px] p-8 shadow-modal w-[440px] max-w-[90vw] relative">
+      <div className="bg-white rounded-[16px] pt-8 px-8 pb-6 shadow-modal w-[440px] max-w-[90vw] relative">
         <button
           onClick={onComplete}
-          className="absolute top-5 right-5 text-silver hover:text-slate transition-colors duration-150 p-1 rounded-full hover:bg-mist"
+          className="absolute top-5 right-5 text-stone hover:text-graphite transition-colors duration-150 p-1 rounded-full hover:bg-mist"
         >
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
             <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
@@ -155,7 +155,7 @@ export default function Home() {
             <h2 className="text-[18px] font-bold text-graphite">대시보드</h2>
             <div className="flex items-center gap-2">
               <Link
-                href="/timetable"
+                href="/timetable?add=1"
                 className="inline-flex items-center h-9 px-4 bg-mist text-graphite text-[13px] font-bold rounded-[8px] hover:bg-silver transition-colors duration-150"
               >
                 + 일정 등록
@@ -199,11 +199,11 @@ export default function Home() {
                       <div key={m.id} className="flex items-center gap-5 px-7 py-5 transition-colors duration-150">
                         <div className="w-[140px] shrink-0">
                           <span className="text-[14px] font-semibold text-graphite tabular-nums block">{today.month}/{today.date} {today.dayLabel}요일</span>
-                          <span className="text-[12px] text-stone tabular-nums">{m.hour.toString().padStart(2, "0")}:00 – {(m.hour + 1).toString().padStart(2, "0")}:00</span>
+                          <span className="text-[12px] text-slate tabular-nums">{m.hour.toString().padStart(2, "0")}:00 – {(m.hour + 1).toString().padStart(2, "0")}:00</span>
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-[14px] font-semibold text-graphite truncate">{m.title}</p>
-                          <p className="text-[12px] text-stone mt-0.5 tabular-nums">{m.attendees.length}명 참석</p>
+                          <p className="text-[12px] text-slate mt-0.5 tabular-nums">{m.attendees.length}명 참석</p>
                         </div>
                         <div className="w-16 flex justify-center">
                           <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[12px] font-bold ${statusStyle}`}>
@@ -289,12 +289,12 @@ export default function Home() {
                     >
                       <div className="w-[140px] shrink-0">
                         <span className="text-[14px] font-semibold text-graphite tabular-nums block">{today.month}/{today.date} {today.dayLabel}요일</span>
-                        <span className="text-[12px] text-stone tabular-nums">{m.hour.toString().padStart(2, "0")}:00 – {(m.hour + 1).toString().padStart(2, "0")}:00</span>
+                        <span className="text-[12px] text-slate tabular-nums">{m.hour.toString().padStart(2, "0")}:00 – {(m.hour + 1).toString().padStart(2, "0")}:00</span>
                       </div>
 
                       <div className="flex-1 min-w-0">
                         <p className="text-[14px] font-semibold text-graphite truncate">{m.title}</p>
-                        <p className="text-[12px] text-stone mt-0.5 tabular-nums">
+                        <p className="text-[12px] text-slate mt-0.5 tabular-nums">
                           {m.attendees.length}명 참석
                         </p>
                       </div>
@@ -330,7 +330,7 @@ export default function Home() {
 
                       <button
                         onClick={() => setDeleteTarget(m.id)}
-                        className="w-8 text-silver hover:text-error transition-colors duration-150 p-1.5 rounded-full hover:bg-error/5 flex items-center justify-center"
+                        className="w-8 text-stone hover:text-error transition-colors duration-150 p-1.5 rounded-full hover:bg-error/5 flex items-center justify-center"
                       >
                         <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                           <path d="M3.5 3.5l7 7M10.5 3.5l-7 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
@@ -348,7 +348,7 @@ export default function Home() {
 
       {showWelcome && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center backdrop-blur-sm bg-black/40">
-          <div className="bg-white rounded-[16px] p-8 shadow-modal w-[420px] max-w-[90vw] text-center">
+          <div className="bg-white rounded-[16px] pt-8 px-8 pb-6 shadow-modal w-[420px] max-w-[90vw] text-center">
             <h2 className="text-[18px] font-bold text-graphite leading-snug mb-2">토스 프로덕트 디자이너 챌린지 2026</h2>
             <p className="text-[14px] text-slate mb-1">PC 전체화면으로 확인해주세요!</p>
             <p className="text-[13px] text-stone mb-7">제출자 : 김나은</p>

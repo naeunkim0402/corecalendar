@@ -21,7 +21,7 @@ export function ListItem({ title, subtitle, left, right, onClick }: ListItemProp
       <div className="flex-1 min-w-0">
         <p className="text-[15px] font-medium text-graphite truncate">{title}</p>
         {subtitle && (
-          <p className="text-[13px] text-stone mt-0.5 truncate">{subtitle}</p>
+          <p className="text-[13px] text-slate mt-0.5 truncate">{subtitle}</p>
         )}
       </div>
       {right && <div className="flex-shrink-0">{right}</div>}

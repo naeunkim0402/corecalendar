@@ -82,7 +82,7 @@ export default function NotificationsPage() {
                               {organizerPerson.avatar}
                             </div>
                           )}
-                          <span className="text-[12px] text-stone">
+                          <span className="text-[12px] text-slate">
                             {organizerPerson?.name} · {organizerPerson?.role}
                           </span>
                         </div>
@@ -128,7 +128,7 @@ export default function NotificationsPage() {
                         <div className="w-6 h-6 rounded-full bg-[#007AFF] flex items-center justify-center text-[12px] font-bold text-white">
                           나
                         </div>
-                        <span className="text-[12px] text-stone">
+                        <span className="text-[12px] text-slate">
                           김나은 · 프로덕트 디자이너
                         </span>
                       </div>
@@ -193,7 +193,7 @@ export default function NotificationsPage() {
                               {organizerPerson.avatar}
                             </div>
                           )}
-                          <span className="text-[12px] text-stone">{organizerPerson?.name}</span>
+                          <span className="text-[12px] text-slate">{organizerPerson?.name}</span>
                         </div>
                       </div>
                     </div>
@@ -221,7 +221,7 @@ export default function NotificationsPage() {
                         <div className="w-6 h-6 rounded-full bg-[#007AFF] flex items-center justify-center text-[12px] font-bold text-white">
                           나
                         </div>
-                        <span className="text-[12px] text-stone">김나은</span>
+                        <span className="text-[12px] text-slate">김나은</span>
                       </div>
                     </div>
                   </div>

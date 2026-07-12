@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { AppShell } from "@/components/ui";
 import { DAYS, HOURS, CORE_HOURS_START, PEOPLE, type SlotState, isBusinessHour } from "@/lib/data";
 import { useTimetable } from "@/lib/store";
@@ -40,7 +41,7 @@ function AddScheduleModal({
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center backdrop-blur-sm bg-black/40">
-      <div className="bg-white rounded-[16px] p-7 shadow-modal w-[440px] max-w-[90vw]">
+      <div className="bg-white rounded-[16px] pt-7 px-7 pb-6 shadow-modal w-[440px] max-w-[90vw]">
         {submitted ? (
           <div className="flex flex-col items-center py-10">
             <div className="w-14 h-14 rounded-full bg-success/8 flex items-center justify-center mb-4">
@@ -49,16 +50,16 @@ function AddScheduleModal({
               </svg>
             </div>
             <p className="text-[15px] font-bold text-graphite">일정이 등록되었습니다</p>
-            <p className="text-[12px] text-stone mt-1">시간표에 자동으로 반영됩니다</p>
+            <p className="text-[12px] text-slate mt-1">시간표에 자동으로 반영됩니다</p>
           </div>
         ) : (
           <>
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h3 className="text-[17px] font-bold text-graphite">일정 등록</h3>
-                <p className="text-[12px] text-stone mt-0.5">새로운 일정을 시간표에 추가합니다</p>
+                <p className="text-[12px] text-slate mt-0.5">새로운 일정을 시간표에 추가합니다</p>
               </div>
-              <button onClick={onClose} className="text-silver hover:text-slate transition-colors duration-150 p-1.5 rounded-full hover:bg-mist">
+              <button onClick={onClose} className="text-stone hover:text-graphite transition-colors duration-150 p-1.5 rounded-full hover:bg-mist">
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                   <path d="M3.5 3.5l7 7M10.5 3.5l-7 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
                 </svg>
@@ -192,17 +193,29 @@ function isOffHour(h: number): boolean {
 }
 
 export default function TimetablePage() {
+  return (
+    <Suspense>
+      <TimetableContent />
+    </Suspense>
+  );
+}
+
+function TimetableContent() {
+  const searchParams = useSearchParams();
   const [viewingPerson, setViewingPerson] = useState("f");
   const { timetable, update, reset, loaded } = useTimetable(viewingPerson);
   const [activeBrush, setActiveBrush] = useState<BrushType>("unavailable");
   const [isPainting, setIsPainting] = useState(false);
   const [saved, setSaved] = useState(false);
   const [weekOffset, setWeekOffset] = useState(0);
-  const [showAddModal, setShowAddModal] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(() => searchParams.get("add") === "1");
   const [slotTags, setSlotTags] = useState<Record<string, string>>({});
+  const [teamDropdownOpen, setTeamDropdownOpen] = useState(false);
   const gridRef = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const person = PEOPLE.find((p) => p.id === viewingPerson)!;
+  const isMe = viewingPerson === "f";
   const weekInfo = getWeekInfo(weekOffset);
 
   useEffect(() => {
@@ -222,6 +235,16 @@ export default function TimetablePage() {
       gridRef.current.scrollTop = CORE_HOURS_START * rowHeight;
     }
   }, [loaded, viewingPerson]);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setTeamDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const paint = useCallback((key: string) => {
     const [, hourStr] = key.split("-");
@@ -264,6 +287,8 @@ export default function TimetablePage() {
         <header className="sticky top-0 z-20 bg-white/80 backdrop-blur-xl shadow-[0_1px_0_rgba(0,0,0,0.04)]">
           <div className="max-w-[1200px] mx-auto flex items-center justify-between h-16 px-10">
             <div className="flex items-center gap-3">
+              <h2 className="text-[18px] font-bold text-graphite">{isMe ? "내 캘린더" : `${person.name}의 캘린더`}</h2>
+              <div className="w-px h-5 bg-silver mx-1" />
               <button
                 onClick={() => setWeekOffset((v) => v - 1)}
                 className="w-8 h-8 flex items-center justify-center rounded-full text-slate hover:bg-mist transition-colors duration-150"
@@ -273,9 +298,9 @@ export default function TimetablePage() {
                   <path d="M10 4l-4 4 4 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </button>
-              <h2 className="text-[18px] font-bold text-graphite tabular-nums tracking-tight whitespace-nowrap">
+              <span className="text-[15px] font-bold text-graphite tabular-nums tracking-tight whitespace-nowrap">
                 {weekInfo.year}년 {weekInfo.month}월 {weekInfo.weekOfMonth}주차
-              </h2>
+              </span>
               <button
                 onClick={() => setWeekOffset((v) => v + 1)}
                 className="w-8 h-8 flex items-center justify-center rounded-full text-slate hover:bg-mist transition-colors duration-150"
@@ -287,15 +312,68 @@ export default function TimetablePage() {
               </button>
             </div>
             <div className="flex items-center gap-2">
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  onClick={() => setTeamDropdownOpen((v) => !v)}
+                  className="h-9 pl-3 pr-8 bg-mist text-graphite text-[13px] font-bold rounded-[8px] hover:bg-silver transition-colors duration-150 flex items-center gap-2.5 relative"
+                >
+                  <div
+                    className="w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold text-white shrink-0"
+                    style={{ backgroundColor: person.color }}
+                  >
+                    {person.avatar}
+                  </div>
+                  <span>{person.name}</span>
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate">
+                    <path d="M4 5.5l3 3 3-3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </button>
+                {teamDropdownOpen && (
+                  <div className="absolute right-0 top-[calc(100%+6px)] w-[220px] bg-white rounded-[12px] shadow-modal border border-silver/60 py-1.5 z-30">
+                    <p className="px-4 py-2 text-[11px] font-bold text-slate uppercase tracking-wider">팀 캘린더 보기</p>
+                    {PEOPLE.map((p) => (
+                      <button
+                        key={p.id}
+                        onClick={() => { setViewingPerson(p.id); setTeamDropdownOpen(false); }}
+                        className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors duration-100 ${
+                          viewingPerson === p.id ? "bg-mist" : "hover:bg-paper"
+                        }`}
+                      >
+                        <div
+                          className="w-7 h-7 rounded-full flex items-center justify-center text-[12px] font-bold text-white shrink-0"
+                          style={{ backgroundColor: p.color }}
+                        >
+                          {p.avatar}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <span className="text-[13px] font-semibold text-graphite block">{p.name}</span>
+                          <span className="text-[11px] text-slate">{p.role}</span>
+                        </div>
+                        {viewingPerson === p.id && (
+                          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="text-ink shrink-0">
+                            <path d="M3 7.5l3 3 5-6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
               <button
                 onClick={() => setShowAddModal(true)}
-                className="inline-flex items-center h-9 px-4 bg-mist text-graphite text-[13px] font-bold rounded-[8px] hover:bg-silver transition-colors duration-150"
+                disabled={!isMe}
+                className={`inline-flex items-center h-9 px-4 text-[13px] font-bold rounded-[8px] transition-colors duration-150 ${
+                  isMe ? "bg-mist text-graphite hover:bg-silver" : "bg-mist/50 text-slate/40 cursor-not-allowed"
+                }`}
               >
                 + 일정 등록
               </button>
               <button
                 onClick={handleSave}
-                className="inline-flex items-center h-9 px-4 bg-ink text-white text-[13px] font-bold rounded-[8px] active:bg-black transition-colors duration-150"
+                disabled={!isMe}
+                className={`inline-flex items-center h-9 px-4 text-[13px] font-bold rounded-[8px] transition-colors duration-150 ${
+                  isMe ? "bg-ink text-white active:bg-black" : "bg-ink/30 text-white/50 cursor-not-allowed"
+                }`}
               >
                 {saved ? "저장됨!" : "저장"}
               </button>
@@ -304,101 +382,72 @@ export default function TimetablePage() {
         </header>
 
         <div className="max-w-[1200px] mx-auto px-10 py-10">
-          {/* 팀 멤버 캘린더 보기 */}
-          <div className="bg-white rounded-[16px] shadow-card px-6 py-4 flex items-center gap-4 mb-6">
-            <span className="text-[12px] font-bold text-stone">팀 멤버 캘린더 보기</span>
-            <div className="w-px h-5 bg-silver" />
-            <div className="flex items-center gap-2.5">
-              {PEOPLE.map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => setViewingPerson(p.id)}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-full transition-all duration-200 ${
-                    viewingPerson === p.id
-                      ? "bg-mist ring-1 ring-ink/10"
-                      : "hover:bg-paper opacity-60 hover:opacity-100"
-                  }`}
-                  title={`${p.name} (${p.role})`}
-                >
-                  <div
-                    className="w-7 h-7 rounded-full flex items-center justify-center text-[12px] font-bold text-white shrink-0"
-                    style={{ backgroundColor: p.color }}
+          {/* 브러시 + 안내 (내 캘린더일 때만) */}
+          {isMe && (
+            <div className="bg-white rounded-[16px] shadow-card px-6 py-5 mb-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-[13px] text-charcoal leading-relaxed">
+                    회의가 불가능한 시간과 조정 시간을 드래그로 설정하세요
+                  </p>
+                  <p className="text-[12px] text-slate mt-0.5">
+                    클릭해서 가능한 시간으로 변경할 수 있습니다
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setActiveBrush("unavailable")}
+                    className={`flex items-center gap-2 h-9 px-4 rounded-[8px] text-[12px] font-bold transition-all duration-200 ${
+                      activeBrush === "unavailable"
+                        ? "bg-error/10 text-error ring-1 ring-error/20"
+                        : "bg-mist text-slate hover:bg-silver"
+                    }`}
                   >
-                    {p.avatar}
-                  </div>
-                  {viewingPerson === p.id && (
-                    <span className="text-[12px] font-semibold text-graphite">{p.name}</span>
-                  )}
-                </button>
-              ))}
-            </div>
-            <div className="ml-auto text-[12px] text-stone">{person.role}</div>
-          </div>
-
-          {/* 브러시 + 안내 */}
-          <div className="bg-white rounded-[16px] shadow-card px-6 py-5 mb-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-[13px] text-charcoal leading-relaxed">
-                  회의가 불가능한 시간과 조정 시간을 드래그로 설정하세요
-                </p>
-                <p className="text-[12px] text-stone mt-0.5">
-                  클릭해서 가능한 시간으로 변경할 수 있습니다
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setActiveBrush("unavailable")}
-                  className={`flex items-center gap-2 h-9 px-4 rounded-[8px] text-[12px] font-bold transition-all duration-200 ${
-                    activeBrush === "unavailable"
-                      ? "bg-error/10 text-error ring-1 ring-error/20"
-                      : "bg-mist text-slate hover:bg-silver"
-                  }`}
-                >
-                  <span className="w-3 h-3 rounded-[3px] bg-error/20 border-2 border-error/50" />
-                  불가
-                </button>
-                <button
-                  onClick={() => setActiveBrush("prefer_not")}
-                  className={`flex items-center gap-2 h-9 px-4 rounded-[8px] text-[12px] font-bold transition-all duration-200 ${
-                    activeBrush === "prefer_not"
-                      ? "bg-warning/15 text-warning ring-1 ring-warning/20"
-                      : "bg-mist text-slate hover:bg-silver"
-                  }`}
-                >
-                  <span className="w-3 h-3 rounded-[3px] bg-warning/20 border-2 border-warning/50" />
-                  조정
-                </button>
+                    <span className="w-3 h-3 rounded-[3px] bg-error/20 border-2 border-error/50" />
+                    불가
+                  </button>
+                  <button
+                    onClick={() => setActiveBrush("prefer_not")}
+                    className={`flex items-center gap-2 h-9 px-4 rounded-[8px] text-[12px] font-bold transition-all duration-200 ${
+                      activeBrush === "prefer_not"
+                        ? "bg-warning/15 text-warning ring-1 ring-warning/20"
+                        : "bg-mist text-slate hover:bg-silver"
+                    }`}
+                  >
+                    <span className="w-3 h-3 rounded-[3px] bg-warning/20 border-2 border-warning/50" />
+                    조정
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           {/* 24시간 시간표 그리드 */}
-          <div className="bg-white rounded-[16px] shadow-card p-6 select-none">
+          <div className="bg-white rounded-[16px] shadow-card pt-0 px-6 pb-6 select-none">
             <div
               ref={gridRef}
               className="overflow-y-auto overscroll-contain"
-              style={{ maxHeight: "564px" }}
+              style={{ maxHeight: "600px" }}
             >
-              <div className="grid grid-cols-[56px_repeat(5,1fr)] sticky top-0 z-10 bg-white">
+              <div className="grid grid-cols-[56px_repeat(5,1fr)] sticky top-0 z-10 bg-white border-b border-silver">
                 <div />
                 {DAYS.map((day, i) => (
-                  <div key={i} className="text-center py-2.5 border-b border-l border-silver">
-                    <span className="text-[12px] font-bold text-graphite">{day}</span>
-                    <span className="block text-[12px] text-stone mt-0.5 tabular-nums">
+                  <div key={i} className="text-center py-2.5 border-l border-silver">
+                    <span className="block text-[12px] font-bold text-graphite">{day}</span>
+                    <span className="block text-[12px] text-slate mt-0.5 tabular-nums">
                       {weekInfo.dates[i].month}/{weekInfo.dates[i].date}
                     </span>
                   </div>
                 ))}
               </div>
 
-              <div className="grid grid-cols-[56px_repeat(5,1fr)]">
+              <div className="grid grid-cols-[56px_repeat(5,1fr)] mt-2">
                 {HOURS.map((hour) => {
                   const offHour = isOffHour(hour);
                   return (
                     <div key={`row-${hour}`} className="contents">
                       <div className="relative h-[44px]">
-                        <span className="absolute -top-[7px] right-3 text-[12px] text-stone tabular-nums tracking-tight font-medium leading-none">
+                        <span className="absolute -top-[7px] right-3 text-[12px] text-slate tabular-nums tracking-tight font-medium leading-none">
                           {formatHour(hour)}
                         </span>
                       </div>

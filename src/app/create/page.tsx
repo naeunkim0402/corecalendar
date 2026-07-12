@@ -195,7 +195,7 @@ function MiniCalendarPicker({
       </div>
 
       <div className="flex items-center justify-between mt-4 pt-3 border-t border-mist">
-        <span className="text-[12px] text-stone tabular-nums">
+        <span className="text-[12px] text-slate tabular-nums">
           {tempStart && tempEnd
             ? `${tempStart.slice(5)} ~ ${tempEnd.slice(5)}`
             : tempStart
@@ -371,7 +371,7 @@ export default function CreateMeetingPage() {
                     <div className="flex items-center justify-between">
                       <div>
                         <h3 className="text-[12px] font-bold text-stone uppercase tracking-wider">참석자</h3>
-                        <p className="text-[12px] text-stone mt-1 tabular-nums">{selectedCount}명 · 필수 {requiredCount} · 선택 {selectedCount - requiredCount}</p>
+                        <p className="text-[12px] text-slate mt-1 tabular-nums">{selectedCount}명 · 필수 {requiredCount} · 선택 {selectedCount - requiredCount}</p>
                       </div>
                     </div>
                   </div>
@@ -401,7 +401,7 @@ export default function CreateMeetingPage() {
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-1.5">
                               <span className="text-[13px] font-semibold text-graphite">{person.name}</span>
-                              <span className="text-[12px] text-stone">{person.role}</span>
+                              <span className="text-[12px] text-slate">{person.role}</span>
                             </div>
                           </div>
                           {isSelected && (
@@ -483,7 +483,7 @@ export default function CreateMeetingPage() {
                   <h2 className="text-[22px] font-bold text-graphite mb-2">승인 요청을 보냈어요</h2>
                   <p className="text-[14px] text-slate mb-1">{title}</p>
                   <p className="text-[17px] font-bold text-graphite">{confirmedSlot.label}</p>
-                  <p className="text-[12px] text-stone mt-2 mb-6">필수 참석자 전원 수락 시 자동 확정</p>
+                  <p className="text-[12px] text-slate mt-2 mb-6">필수 참석자 전원 수락 시 자동 확정</p>
 
                   <div className="flex gap-3">
                     <Button variant="secondary" size="lg" fullWidth onClick={() => router.push("/")}>

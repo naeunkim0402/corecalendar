@@ -110,7 +110,6 @@ export function Sidebar({ activeNav }: SidebarProps) {
       <div className="px-4 mb-8">
         <Link href="/" className="block">
           <h1 className="text-[20px] font-black text-graphite tracking-tight">Corecalendar</h1>
-          <p className="text-[12px] font-semibold text-stone tracking-wider uppercase mt-0.5">All-in-One Scheduling</p>
         </Link>
       </div>
 
@@ -134,7 +133,7 @@ export function Sidebar({ activeNav }: SidebarProps) {
           </div>
           <div>
             <span className="text-[13px] font-semibold text-graphite block">김나은</span>
-            <span className="text-[12px] text-stone">프로덕트 디자이너</span>
+            <span className="text-[12px] text-slate">프로덕트 디자이너</span>
           </div>
         </div>
       </div>

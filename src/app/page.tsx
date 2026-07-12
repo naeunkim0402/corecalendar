@@ -10,6 +10,17 @@ import { useMeetings } from "@/lib/store";
 import Link from "next/link";
 
 const DAY_LABELS = ["월", "화", "수", "목", "금"];
+const DAY_LABELS_FULL = ["일", "월", "화", "수", "목", "금", "토"];
+
+function getTodayInfo() {
+  const now = new Date();
+  return {
+    year: now.getFullYear(),
+    month: now.getMonth() + 1,
+    date: now.getDate(),
+    dayLabel: DAY_LABELS_FULL[now.getDay()],
+  };
+}
 
 // [설계 의도]: 최초 1회 이관 팝업으로 진입 장벽을 낮추고, 내부 일정 등록 모달을 통해
 // 모든 비즈니스 스케줄을 이 앱 안으로 락인(Lock-in)시키는 올인원 제품 구조를 완비한다.
@@ -107,6 +118,7 @@ function CalendarSyncModal({ onComplete }: { onComplete: () => void }) {
 export default function Home() {
   const { meetings, deleteMeeting, clearAll, loaded } = useMeetings();
   const [showSyncModal, setShowSyncModal] = useState(false);
+  const today = getTodayInfo();
 
   useEffect(() => {
     const synced = localStorage.getItem("calendar_synced");
@@ -148,7 +160,7 @@ export default function Home() {
             <div className="flex items-center justify-between mb-5 px-1">
               <div>
                 <h3 className="text-[17px] font-bold text-[#191f28]">오늘 일정</h3>
-                <p className="text-[13px] text-[#8b95a1] mt-0.5">2026년 7월 13일 월요일</p>
+                <p className="text-[13px] text-[#8b95a1] mt-0.5">{today.year}년 {today.month}월 {today.date}일 {today.dayLabel}요일</p>
               </div>
             </div>
 
@@ -176,7 +188,7 @@ export default function Home() {
                       <div className="flex-1 min-w-0">
                         <p className="text-[14px] font-semibold text-[#191f28]">{m.title}</p>
                         <p className="text-[12px] text-[#8b95a1] mt-0.5">
-                          {DAY_LABELS[m.day]}요일 · {m.attendees.length}명 참석
+                          {today.dayLabel}요일 · {m.attendees.length}명 참석
                         </p>
                       </div>
                       {/* 상태 */}
@@ -253,8 +265,8 @@ export default function Home() {
 
                       <div className="w-[120px] shrink-0">
                         <div className="flex items-center gap-2">
-                          <span className="text-[12px] font-bold text-[#3182f6] tabular-nums">{DAY_LABELS[m.day]}</span>
-                          <span className="text-[12px] text-[#b0b8c1] tabular-nums">7/{14 + m.day}</span>
+                          <span className="text-[12px] font-bold text-[#3182f6] tabular-nums">{today.dayLabel}</span>
+                          <span className="text-[12px] text-[#b0b8c1] tabular-nums">{today.month}/{today.date}</span>
                         </div>
                         <span className="text-[15px] font-bold text-[#191f28] tabular-nums tracking-tight block mt-0.5">{m.hour}:00 – {m.hour + 1}:00</span>
                       </div>

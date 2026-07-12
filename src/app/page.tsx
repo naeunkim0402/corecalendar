@@ -251,10 +251,10 @@ export default function Home() {
           </section>
 
           {/* 회의 목록 */}
-          {loaded && meetings.length > 0 && (
+          {loaded && meetings.filter((m) => m.status !== "rejected").length > 0 && (
             <section className="mb-14">
               <div className="flex items-center justify-between mb-5 px-1">
-                <h3 className="text-[17px] font-bold text-graphite">회의</h3>
+                <h3 className="text-[17px] font-bold text-graphite">예정 회의</h3>
                 <button onClick={() => setDeleteTarget("all")} className="text-[13px] text-stone hover:text-error transition-colors duration-150 px-3 py-1.5 rounded-[8px] hover:bg-error/5">
                   전체 삭제
                 </button>
@@ -271,7 +271,7 @@ export default function Home() {
 
               {/* 테이블 행 */}
               <div className="bg-white rounded-b-[16px] shadow-card -mt-px divide-y divide-mist">
-                {meetings.map((m) => {
+                {meetings.filter((m) => m.status !== "rejected").map((m) => {
                   const status = m.status || "approved";
                   const statusStyle = status === "pending"
                     ? "bg-warning/15 text-warning"

@@ -220,7 +220,7 @@ const STATE_COLORS: Record<SlotState, string> = {
 const STATE_LABELS: Record<SlotState, string> = {
   available: "",
   unavailable: "불가",
-  prefer_not: "조정",
+  prefer_not: "비선호",
 };
 
 type BrushType = "unavailable" | "prefer_not";
@@ -279,6 +279,7 @@ function TimetableContent() {
   const searchParams = useSearchParams();
   const [viewingPerson, setViewingPerson] = useState("f");
   const { timetable, update, reset, loaded } = useTimetable(viewingPerson);
+  const [editMode, setEditMode] = useState<BrushType | null>(null);
   const [activeBrush, setActiveBrush] = useState<BrushType>("unavailable");
   const [isPainting, setIsPainting] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -322,21 +323,15 @@ function TimetableContent() {
   }, []);
 
   const paint = useCallback((key: string) => {
-    const [, hourStr] = key.split("-");
-    const hour = Number(hourStr);
-    const offHour = isOffHour(hour);
+    if (!editMode) return;
     const state = timetable[key] || "available";
+    // 반대 상태 셀은 수정 불가
+    if (state !== "available" && state !== editMode) return;
 
-    let newState: SlotState;
-    if (state !== "available") {
-      newState = "available";
-    } else {
-      newState = activeBrush;
-    }
-
+    const newState: SlotState = state === editMode ? "available" : editMode;
     const newTable: Record<string, SlotState> = { ...timetable, [key]: newState };
     update(newTable);
-  }, [activeBrush, timetable, update]);
+  }, [editMode, timetable, update]);
 
   const handlePointerDown = (key: string) => {
     setIsPainting(true);
@@ -443,62 +438,60 @@ function TimetableContent() {
               >
                 + 일정 등록
               </button>
-              <button
-                onClick={handleSave}
-                disabled={!isMe}
-                className={`inline-flex items-center h-9 px-4 text-[13px] font-bold rounded-[8px] transition-colors duration-150 ${
-                  isMe ? "bg-ink text-white active:bg-black" : "bg-ink/30 text-white/50 cursor-not-allowed"
-                }`}
-              >
-                {saved ? "저장됨!" : "저장"}
-              </button>
             </div>
           </div>
         </header>
 
         <div className="max-w-[1200px] mx-auto px-10 py-10">
-          {/* 브러시 + 안내 (내 캘린더일 때만) */}
-          {isMe && (
-            <div className="bg-white rounded-[16px] shadow-card px-6 py-5 mb-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-[13px] text-charcoal leading-relaxed">
-                    회의가 불가능한 시간과 조정 시간을 드래그로 설정하세요
-                  </p>
-                  <p className="text-[12px] text-slate mt-0.5">
-                    클릭해서 가능한 시간으로 변경할 수 있습니다
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setActiveBrush("unavailable")}
-                    className={`flex items-center gap-2 h-9 px-4 rounded-[8px] text-[12px] font-bold transition-all duration-200 ${
-                      activeBrush === "unavailable"
-                        ? "bg-error/10 text-error ring-1 ring-error/20"
-                        : "bg-mist text-slate hover:bg-silver"
-                    }`}
-                  >
-                    <span className="w-3 h-3 rounded-[3px] bg-error/20 border-2 border-error/50" />
-                    불가
-                  </button>
-                  <button
-                    onClick={() => setActiveBrush("prefer_not")}
-                    className={`flex items-center gap-2 h-9 px-4 rounded-[8px] text-[12px] font-bold transition-all duration-200 ${
-                      activeBrush === "prefer_not"
-                        ? "bg-warning/15 text-warning ring-1 ring-warning/20"
-                        : "bg-mist text-slate hover:bg-silver"
-                    }`}
-                  >
-                    <span className="w-3 h-3 rounded-[3px] bg-warning/20 border-2 border-warning/50" />
-                    조정
-                  </button>
-                </div>
-              </div>
+          {/* 액션 버튼 (내 캘린더일 때만) */}
+          {isMe && !editMode && (
+            <div className="flex items-center gap-2 mb-6">
+              <button
+                onClick={() => setEditMode("unavailable")}
+                className="h-10 px-5 bg-mist text-graphite text-[13px] font-bold rounded-[8px] hover:bg-silver transition-colors duration-150"
+              >
+                불가능한 시간 선택하기
+              </button>
+              <button
+                onClick={() => setEditMode("prefer_not")}
+                className="h-10 px-5 bg-mist text-graphite text-[13px] font-bold rounded-[8px] hover:bg-silver transition-colors duration-150"
+              >
+                비선호 시간 선택하기
+              </button>
+              <button
+                className="h-10 px-5 bg-mist text-graphite text-[13px] font-bold rounded-[8px] hover:bg-silver transition-colors duration-150"
+              >
+                외부 캘린더 연동하기
+              </button>
             </div>
           )}
 
+          {/* 편집 모드 안내 배너 */}
+          {editMode && (
+            <div className="bg-white rounded-[16px] shadow-card px-6 py-4 mb-4 flex items-center justify-between relative z-20">
+              <div>
+                <p className="text-[13px] font-semibold text-graphite">
+                  {editMode === "unavailable"
+                    ? "회의가 불가능한 시간을 모두 드래그해주세요. 클릭해서 해제할 수 있습니다."
+                    : "비선호하지만 조정 가능한 시간대를 드래그해주세요. 클릭해서 해제할 수 있습니다."}
+                </p>
+              </div>
+              <button
+                onClick={() => { handleSave(); setEditMode(null); }}
+                className="h-9 px-5 bg-ink text-white text-[13px] font-bold rounded-[8px] active:bg-black transition-colors duration-150 shrink-0 ml-4"
+              >
+                저장
+              </button>
+            </div>
+          )}
+
+          {/* 블러 오버레이 (편집 모드 시 캘린더 외 영역) */}
+          {editMode && (
+            <div className="fixed inset-0 z-10 bg-black/10 backdrop-blur-[2px] pointer-events-none" />
+          )}
+
           {/* 24시간 시간표 그리드 */}
-          <div className="bg-white rounded-[16px] shadow-card pt-0 px-6 pb-6 select-none">
+          <div className={`bg-white rounded-[16px] shadow-card pt-0 px-6 pb-6 select-none ${editMode ? "relative z-20" : ""}`}>
             <div
               ref={gridRef}
               className="overflow-y-auto overscroll-contain"
@@ -516,26 +509,31 @@ function TimetableContent() {
                 ))}
               </div>
 
-              <div className="grid grid-cols-[56px_repeat(5,1fr)] mt-2">
+              <div className="grid grid-cols-[56px_repeat(5,1fr)]">
                 {HOURS.map((hour) => {
-                  const offHour = isOffHour(hour);
                   return (
                     <div key={`row-${hour}`} className="contents">
                       <div className="relative h-[44px]">
-                        <span className="absolute -top-[7px] right-3 text-[12px] text-slate tabular-nums tracking-tight font-medium leading-none">
-                          {formatHour(hour)}
-                        </span>
+                        {hour > 0 && (
+                          <span className="absolute -top-[7px] right-3 text-[12px] text-slate tabular-nums tracking-tight font-medium leading-none">
+                            {formatHour(hour)}
+                          </span>
+                        )}
                       </div>
                       {DAYS.map((_, dayIdx) => {
                         const key = `${dayIdx}-${hour}`;
                         const state = timetable[key] || "available";
+                        const isOpposite = editMode && state !== "available" && state !== editMode;
+                        const isEditable = editMode && !isOpposite;
 
                         return (
                           <div
                             key={key}
-                            className={`h-[44px] border-t border-l border-silver cursor-pointer transition-colors duration-100 flex flex-col items-center justify-center ${STATE_COLORS[state]}`}
-                            onPointerDown={() => handlePointerDown(key)}
-                            onPointerEnter={() => handlePointerEnter(key)}
+                            className={`h-[44px] border-t border-l border-silver transition-colors duration-100 flex flex-col items-center justify-center ${STATE_COLORS[state]} ${
+                              isOpposite ? "opacity-30 cursor-not-allowed" : editMode ? "cursor-pointer" : isMe ? "cursor-pointer" : "cursor-default"
+                            }`}
+                            onPointerDown={() => isEditable && handlePointerDown(key)}
+                            onPointerEnter={() => isEditable && handlePointerEnter(key)}
                           >
                             {state !== "available" && (
                               <span className={`text-[12px] font-medium ${

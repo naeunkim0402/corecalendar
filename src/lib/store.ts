@@ -89,6 +89,23 @@ export function useMeetings() {
     setLoaded(true);
   }, []);
 
+  // 페이지 전환 시 localStorage에서 최신 데이터 동기화
+  useEffect(() => {
+    const sync = () => setMeetings(load<ConfirmedMeeting[]>("meetings", []));
+    window.addEventListener("storage", sync);
+    // SPA 네비게이션 후 마운트 시 최신 데이터 반영
+    const handleRouteChange = () => {
+      requestAnimationFrame(sync);
+    };
+    window.addEventListener("popstate", handleRouteChange);
+    window.addEventListener("focus", sync);
+    return () => {
+      window.removeEventListener("storage", sync);
+      window.removeEventListener("popstate", handleRouteChange);
+      window.removeEventListener("focus", sync);
+    };
+  }, []);
+
   const addMeeting = useCallback((meeting: ConfirmedMeeting) => {
     setMeetings((prev) => {
       const next = [...prev, meeting];

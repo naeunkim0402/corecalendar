@@ -39,7 +39,7 @@ export function ReviewerGuidePanel() {
           >
             <div className="flex items-center gap-3 mb-2">
               <span className="w-6 h-6 rounded-[6px] bg-[#0064FF] text-white text-[12px] font-bold flex items-center justify-center shrink-0">▶</span>
-              <span className="text-[15px] font-bold text-white group-hover:text-white/70 transition-colors duration-150">웰컴 모달부터 시작</span>
+              <span className="text-[15px] font-bold text-white group-hover:text-white/70 transition-colors duration-150">웰컴 모달부터 시작하기</span>
             </div>
             <p className="text-[12px] text-white/60 ml-9 leading-[1.6]">
               데이터 리셋 → 웰컴 → 온보딩 → 대시보드
@@ -52,7 +52,7 @@ export function ReviewerGuidePanel() {
           >
             <div className="flex items-center gap-3 mb-2">
               <span className="w-6 h-6 rounded-[6px] bg-ink text-white text-[12px] font-bold flex items-center justify-center shrink-0">▶</span>
-              <span className="text-[15px] font-bold text-white group-hover:text-white/70 transition-colors duration-150">온보딩 모달부터 시작</span>
+              <span className="text-[15px] font-bold text-white group-hover:text-white/70 transition-colors duration-150">온보딩 모달부터 시작하기</span>
             </div>
             <p className="text-[12px] text-white/60 ml-9 leading-[1.6]">
               데이터 리셋 → 온보딩 → 대시보드
@@ -65,7 +65,7 @@ export function ReviewerGuidePanel() {
           >
             <div className="flex items-center gap-3 mb-2">
               <span className="w-6 h-6 rounded-[6px] bg-ink text-white text-[12px] font-bold flex items-center justify-center shrink-0">1</span>
-              <span className="text-[15px] font-bold text-white group-hover:text-white/70 transition-colors duration-150">6인 회의 바로 만들기</span>
+              <span className="text-[15px] font-bold text-white group-hover:text-white/70 transition-colors duration-150">6명 회의 바로 생성해보기</span>
             </div>
             <p className="text-[12px] text-white/60 ml-9 leading-[1.6]">
               회의 생성 → 참석자 선택 → 실시간 추천
@@ -78,7 +78,7 @@ export function ReviewerGuidePanel() {
           >
             <div className="flex items-center gap-3 mb-2">
               <span className="w-6 h-6 rounded-[6px] bg-error text-white text-[12px] font-bold flex items-center justify-center shrink-0">2</span>
-              <span className="text-[15px] font-bold text-white group-hover:text-error transition-colors duration-150">데이터 완전 리셋</span>
+              <span className="text-[15px] font-bold text-white group-hover:text-error transition-colors duration-150">데모 데이터 초기화 하기</span>
             </div>
             <p className="text-[12px] text-white/60 ml-9 leading-[1.6]">
               확정 회의 전체 삭제 · 초기 상태로 복원

@@ -355,7 +355,7 @@ export default function CreateMeetingPage() {
   };
 
   const dateLabel = dateStart && dateEnd
-    ? `${dateStart.slice(5).replace("-", "/")} – ${dateEnd.slice(5).replace("-", "/")}`
+    ? `${dateStart.slice(5).replace("-", "/")} ~ ${dateEnd.slice(5).replace("-", "/")}`
     : "날짜 범위 선택";
 
   return (
@@ -499,7 +499,7 @@ export default function CreateMeetingPage() {
               <motion.div key="recommend" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                 <div className="text-center mb-10">
                   <h2 className="text-[24px] font-bold text-graphite tracking-tight">
-                    최적의 시간 <span className="text-ink font-black">{topSlots.length}개</span>를 찾았어요
+                    선택한 기간에서 최적의 시간 {topSlots.length}개를 찾았어요
                   </h2>
                   <p className="text-[13px] text-stone mt-2">
                     아래 추천 시간 중 선택해보세요!

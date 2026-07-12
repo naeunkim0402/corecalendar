@@ -260,7 +260,7 @@ export function computeRecommendations(
       }
 
       const dateNum = 14 + day;
-      const label = `${DAY_LABELS[day]}요일 7/${dateNum} · ${hour}:00 – ${hour + 1}:00`;
+      const label = `7/${dateNum} ${DAY_LABELS[day]}요일 · ${hour.toString().padStart(2, "0")}:00 – ${(hour + 1).toString().padStart(2, "0")}:00`;
 
       slots.push({
         day, hour, label,

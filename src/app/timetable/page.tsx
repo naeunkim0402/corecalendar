@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect } from "react";
-import { AppShell, Button } from "@/components/ui";
+import { AppShell } from "@/components/ui";
 import { DAYS, HOURS, CORE_HOURS_START, PEOPLE, type SlotState, isBusinessHour } from "@/lib/data";
 import { useTimetable } from "@/lib/store";
 
@@ -84,7 +84,7 @@ function AddScheduleModal({
                   <button
                     key={t}
                     onClick={() => setTag(t)}
-                    className={`px-3.5 py-1.5 rounded-full text-[12px] font-bold transition-all duration-200 ${
+                    className={`px-3.5 py-1.5 rounded-[8px] text-[12px] font-bold transition-all duration-200 ${
                       tag === t ? `${TAG_COLORS[t].active} scale-105` : TAG_COLORS[t].inactive
                     }`}
                   >
@@ -124,7 +124,7 @@ function AddScheduleModal({
             <button
               onClick={handleSubmit}
               disabled={!title.trim()}
-              className="w-full h-12 bg-ink text-white text-[14px] font-bold rounded-full active:bg-black transition-colors duration-150 disabled:opacity-40 disabled:cursor-not-allowed"
+              className="w-full h-12 bg-ink text-white text-[14px] font-bold rounded-[8px] active:bg-black transition-colors duration-150 disabled:opacity-40 disabled:cursor-not-allowed"
             >
               등록하기
             </button>
@@ -289,13 +289,16 @@ export default function TimetablePage() {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setShowAddModal(true)}
-                className="inline-flex items-center h-9 px-4 bg-mist text-graphite text-[13px] font-bold rounded-full hover:bg-silver transition-colors duration-150"
+                className="inline-flex items-center h-9 px-4 bg-mist text-graphite text-[13px] font-bold rounded-[8px] hover:bg-silver transition-colors duration-150"
               >
-                일정 등록
+                + 일정 등록
               </button>
-              <Button size="sm" onClick={handleSave}>
+              <button
+                onClick={handleSave}
+                className="inline-flex items-center h-9 px-4 bg-ink text-white text-[13px] font-bold rounded-[8px] active:bg-black transition-colors duration-150"
+              >
                 {saved ? "저장됨!" : "저장"}
-              </Button>
+              </button>
             </div>
           </div>
         </header>
@@ -346,7 +349,7 @@ export default function TimetablePage() {
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setActiveBrush("unavailable")}
-                  className={`flex items-center gap-2 h-9 px-4 rounded-full text-[12px] font-bold transition-all duration-200 ${
+                  className={`flex items-center gap-2 h-9 px-4 rounded-[8px] text-[12px] font-bold transition-all duration-200 ${
                     activeBrush === "unavailable"
                       ? "bg-error/10 text-error ring-1 ring-error/20"
                       : "bg-mist text-slate hover:bg-silver"
@@ -357,7 +360,7 @@ export default function TimetablePage() {
                 </button>
                 <button
                   onClick={() => setActiveBrush("prefer_not")}
-                  className={`flex items-center gap-2 h-9 px-4 rounded-full text-[12px] font-bold transition-all duration-200 ${
+                  className={`flex items-center gap-2 h-9 px-4 rounded-[8px] text-[12px] font-bold transition-all duration-200 ${
                     activeBrush === "prefer_not"
                       ? "bg-warning/15 text-warning ring-1 ring-warning/20"
                       : "bg-mist text-slate hover:bg-silver"

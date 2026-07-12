@@ -45,7 +45,7 @@ function DeleteConfirmModal({
         </p>
         <button
           onClick={() => { onConfirm(); onClose(); }}
-          className="w-full h-12 bg-error text-white text-[14px] font-bold rounded-full active:bg-[#d93a47] transition-colors duration-150"
+          className="w-full h-12 bg-error text-white text-[14px] font-bold rounded-[8px] active:bg-[#d93a47] transition-colors duration-150"
         >
           네, 삭제할게요
         </button>
@@ -54,7 +54,7 @@ function DeleteConfirmModal({
   );
 }
 
-function CalendarSyncModal({ onComplete }: { onComplete: () => void }) {
+function OnboardingModal({ onComplete }: { onComplete: () => void }) {
   const [syncing, setSyncing] = useState(false);
   const [done, setDone] = useState(false);
 
@@ -70,54 +70,39 @@ function CalendarSyncModal({ onComplete }: { onComplete: () => void }) {
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center backdrop-blur-sm bg-black/40">
-      <div className="bg-white rounded-[16px] p-8 shadow-modal w-[440px] max-w-[90vw]">
-        <div className="w-14 h-14 rounded-2xl bg-mist flex items-center justify-center mx-auto mb-5">
-          <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-            <rect x="4" y="5" width="20" height="19" rx="3" stroke="#191f28" strokeWidth="1.8" />
-            <path d="M4 11h20M9 3v4M19 3v4" stroke="#191f28" strokeWidth="1.8" strokeLinecap="round" />
-            <path d="M10 16l2.5 2.5L18 13" stroke="#03b26c" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      <div className="bg-white rounded-[16px] p-8 shadow-modal w-[440px] max-w-[90vw] relative">
+        <button
+          onClick={onComplete}
+          className="absolute top-5 right-5 text-silver hover:text-slate transition-colors duration-150 p-1 rounded-full hover:bg-mist"
+        >
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
           </svg>
-        </div>
+        </button>
 
         <h2 className="text-[18px] font-bold text-graphite text-center leading-snug mb-2">
           반가워요!
         </h2>
-        <p className="text-[14px] text-slate text-center leading-[1.7] mb-1">
-          이제 코어캘린더에서
+        <p className="text-[14px] text-graphite font-semibold text-center leading-[1.7] mb-1">
+          이제 코어캘린더에서 업무 및 회의 일정을 한번에 관리하세요!
         </p>
-        <p className="text-[14px] text-graphite font-semibold text-center leading-[1.7] mb-6">
-          업무 일정, 회의, 휴가 모두 관리해보세요
+        <p className="text-[13px] text-stone text-center leading-[1.7] mb-7">
+          기존에 쓰던 캘린더 한번만 연동하면 코어캘린더에 다 옮겨줘요
         </p>
-
-        <div className="space-y-2.5 mb-7">
-          {[
-            "기존 캘린더 일정을 자동으로 가져옵니다",
-            "불가·조정 시간을 한 번만 세팅하면 끝",
-            "회의 확정 시 모든 참석자 일정에 즉시 반영",
-          ].map((text, i) => (
-            <div key={i} className="flex items-start gap-2.5 px-4 py-2.5 bg-paper rounded-[10px]">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="shrink-0 mt-0.5">
-                <circle cx="8" cy="8" r="6" fill="#101010" fillOpacity="0.06" />
-                <path d="M5.5 8l1.8 1.8L10.5 6.5" stroke="#101010" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              <span className="text-[12px] text-slate leading-relaxed">{text}</span>
-            </div>
-          ))}
-        </div>
 
         {done ? (
-          <div className="flex items-center justify-center gap-2 h-12 bg-success/8 rounded-full">
+          <div className="flex items-center justify-center gap-2 h-12 bg-success/8 rounded-[8px]">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
               <circle cx="8" cy="8" r="6" fill="#03b26c" fillOpacity="0.15" />
               <path d="M5.5 8l1.8 1.8L10.5 6.5" stroke="#03b26c" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
-            <span className="text-[13px] font-semibold text-success">연동 완료! 잠시 후 대시보드로 이동합니다</span>
+            <span className="text-[13px] font-semibold text-success">연동 완료!</span>
           </div>
         ) : (
           <button
             onClick={handleSync}
             disabled={syncing}
-            className="w-full h-12 bg-ink text-white text-[14px] font-bold rounded-full active:bg-black transition-colors duration-150 disabled:opacity-40 flex items-center justify-center gap-2"
+            className="w-full h-12 bg-ink text-white text-[14px] font-bold rounded-[8px] active:bg-black transition-colors duration-150 disabled:opacity-40 flex items-center justify-center gap-2"
           >
             {syncing ? (
               <>
@@ -129,15 +114,6 @@ function CalendarSyncModal({ onComplete }: { onComplete: () => void }) {
             )}
           </button>
         )}
-
-        {!done && (
-          <button
-            onClick={onComplete}
-            className="w-full mt-3 text-[12px] text-stone hover:text-slate transition-colors duration-150 py-2"
-          >
-            나중에 할게요
-          </button>
-        )}
       </div>
     </div>
   );
@@ -146,13 +122,17 @@ function CalendarSyncModal({ onComplete }: { onComplete: () => void }) {
 export default function Home() {
   const { meetings, deleteMeeting, clearAll, loaded } = useMeetings();
   const [showSyncModal, setShowSyncModal] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null); // meeting id or "all"
   const today = getTodayInfo();
 
   useEffect(() => {
-    const synced = localStorage.getItem("calendar_synced");
-    if (!synced) {
-      setShowSyncModal(true);
+    const welcomed = sessionStorage.getItem("welcome_shown");
+    if (!welcomed) {
+      setShowWelcome(true);
+    } else {
+      const synced = localStorage.getItem("calendar_synced");
+      if (!synced) setShowSyncModal(true);
     }
   }, []);
 
@@ -176,13 +156,13 @@ export default function Home() {
             <div className="flex items-center gap-2">
               <Link
                 href="/timetable"
-                className="inline-flex items-center h-9 px-4 bg-mist text-graphite text-[13px] font-bold rounded-full hover:bg-silver transition-colors duration-150"
+                className="inline-flex items-center h-9 px-4 bg-mist text-graphite text-[13px] font-bold rounded-[8px] hover:bg-silver transition-colors duration-150"
               >
                 + 일정 등록
               </Link>
               <Link
                 href="/create"
-                className="inline-flex items-center h-9 px-4 bg-ink text-white text-[13px] font-bold rounded-full active:bg-black transition-colors duration-150"
+                className="inline-flex items-center h-9 px-4 bg-ink text-white text-[13px] font-bold rounded-[8px] active:bg-black transition-colors duration-150"
               >
                 + 회의 생성
               </Link>
@@ -201,32 +181,62 @@ export default function Home() {
             </div>
 
             {todayMeetings.length > 0 ? (
-              <div className="bg-white rounded-[16px] shadow-card divide-y divide-mist">
-                {todayMeetings.map((m) => {
-                  const statusStyle = m.status === "pending"
-                    ? "bg-warning/15 text-warning"
-                    : "bg-success/15 text-success";
-                  const statusLabel = m.status === "pending" ? "대기" : "확정";
+              <>
+                <div className="bg-white rounded-t-[16px] shadow-card px-7 py-3.5 flex items-center gap-5">
+                  <span className="w-[140px] text-[12px] font-bold text-stone">날짜/시간</span>
+                  <span className="flex-1 text-[12px] font-bold text-stone">회의명</span>
+                  <span className="w-16 text-[12px] font-bold text-stone text-center">상태</span>
+                  <span className="w-[100px] text-[12px] font-bold text-stone text-right">참석자</span>
+                </div>
+                <div className="bg-white rounded-b-[16px] shadow-card -mt-px divide-y divide-mist">
+                  {todayMeetings.map((m) => {
+                    const statusStyle = m.status === "pending"
+                      ? "bg-warning/15 text-warning"
+                      : "bg-success/15 text-success";
+                    const statusLabel = m.status === "pending" ? "대기" : "확정";
 
-                  return (
-                    <div key={m.id} className="flex items-center gap-5 px-7 py-5 hover:bg-paper transition-colors duration-150">
-                      <div className="w-[72px] shrink-0">
-                        <span className="text-[15px] font-bold text-graphite tabular-nums block">{m.hour}:00</span>
-                        <span className="text-[12px] text-stone tabular-nums">{m.hour + 1}:00</span>
+                    return (
+                      <div key={m.id} className="flex items-center gap-5 px-7 py-5 transition-colors duration-150">
+                        <div className="w-[140px] shrink-0">
+                          <span className="text-[14px] font-semibold text-graphite tabular-nums block">{today.month}/{today.date} {today.dayLabel}요일</span>
+                          <span className="text-[12px] text-stone tabular-nums">{m.hour.toString().padStart(2, "0")}:00 – {(m.hour + 1).toString().padStart(2, "0")}:00</span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[14px] font-semibold text-graphite truncate">{m.title}</p>
+                          <p className="text-[12px] text-stone mt-0.5 tabular-nums">{m.attendees.length}명 참석</p>
+                        </div>
+                        <div className="w-16 flex justify-center">
+                          <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[12px] font-bold ${statusStyle}`}>
+                            {statusLabel}
+                          </span>
+                        </div>
+                        <div className="w-[100px] flex justify-end">
+                          <div className="flex -space-x-1.5">
+                            {m.attendees.slice(0, 4).map((a) => {
+                              const person = PEOPLE.find((p) => p.id === a.id);
+                              return (
+                                <div
+                                  key={a.id}
+                                  className="w-7 h-7 rounded-full flex items-center justify-center text-[12px] font-bold text-white ring-2 ring-white"
+                                  style={{ backgroundColor: person?.color || "#999" }}
+                                  title={a.name}
+                                >
+                                  {person?.avatar}
+                                </div>
+                              );
+                            })}
+                            {m.attendees.length > 4 && (
+                              <div className="w-7 h-7 rounded-full bg-mist flex items-center justify-center text-[12px] font-semibold text-slate ring-2 ring-white">
+                                +{m.attendees.length - 4}
+                              </div>
+                            )}
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[14px] font-semibold text-graphite">{m.title}</p>
-                        <p className="text-[12px] text-stone mt-0.5">
-                          {today.dayLabel}요일 · {m.attendees.length}명 참석
-                        </p>
-                      </div>
-                      <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[12px] font-bold ${statusStyle}`}>
-                        {statusLabel}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
+                    );
+                  })}
+                </div>
+              </>
             ) : (
               <div className="bg-white rounded-[16px] shadow-card flex flex-col items-center justify-center py-16">
                 <div className="w-12 h-12 rounded-[12px] bg-mist flex items-center justify-center mb-4">
@@ -236,7 +246,6 @@ export default function Home() {
                   </svg>
                 </div>
                 <p className="text-[14px] font-bold text-stone">오늘 잡힌 회의 일정이 없어요</p>
-                <p className="text-[12px] text-silver mt-1">회의를 생성하면 이곳에 표시됩니다</p>
               </div>
             )}
           </section>
@@ -246,15 +255,14 @@ export default function Home() {
             <section className="mb-14">
               <div className="flex items-center justify-between mb-5 px-1">
                 <h3 className="text-[17px] font-bold text-graphite">회의</h3>
-                <button onClick={() => setDeleteTarget("all")} className="text-[13px] text-stone hover:text-error transition-colors duration-150 px-3 py-1.5 rounded-full hover:bg-error/5">
+                <button onClick={() => setDeleteTarget("all")} className="text-[13px] text-stone hover:text-error transition-colors duration-150 px-3 py-1.5 rounded-[8px] hover:bg-error/5">
                   전체 삭제
                 </button>
               </div>
 
               {/* 테이블 헤더 */}
               <div className="bg-white rounded-t-[16px] shadow-card px-7 py-3.5 flex items-center gap-5">
-                <span className="w-[100px] text-[12px] font-bold text-stone">날짜</span>
-                <span className="w-[120px] text-[12px] font-bold text-stone">시간</span>
+                <span className="w-[140px] text-[12px] font-bold text-stone">날짜/시간</span>
                 <span className="flex-1 text-[12px] font-bold text-stone">회의명</span>
                 <span className="w-16 text-[12px] font-bold text-stone text-center">상태</span>
                 <span className="w-[100px] text-[12px] font-bold text-stone text-right">참석자</span>
@@ -275,17 +283,13 @@ export default function Home() {
                   return (
                     <div
                       key={m.id}
-                      className={`px-7 py-5 flex items-center gap-5 transition-colors duration-150 hover:bg-paper ${
+                      className={`px-7 py-5 flex items-center gap-5 transition-colors duration-150 ${
                         status === "rejected" ? "opacity-50" : ""
                       }`}
                     >
-                      <div className="w-[100px] shrink-0">
-                        <span className="text-[14px] font-semibold text-graphite tabular-nums block">{today.dayLabel}요일</span>
-                        <span className="text-[12px] text-stone tabular-nums">{today.month}/{today.date}</span>
-                      </div>
-
-                      <div className="w-[120px] shrink-0">
-                        <span className="text-[14px] font-bold text-graphite tabular-nums tracking-tight">{m.hour}:00 – {m.hour + 1}:00</span>
+                      <div className="w-[140px] shrink-0">
+                        <span className="text-[14px] font-semibold text-graphite tabular-nums block">{today.month}/{today.date} {today.dayLabel}요일</span>
+                        <span className="text-[12px] text-stone tabular-nums">{m.hour.toString().padStart(2, "0")}:00 – {(m.hour + 1).toString().padStart(2, "0")}:00</span>
                       </div>
 
                       <div className="flex-1 min-w-0">
@@ -342,8 +346,29 @@ export default function Home() {
         </div>
       </main>
 
+      {showWelcome && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center backdrop-blur-sm bg-black/40">
+          <div className="bg-white rounded-[16px] p-8 shadow-modal w-[420px] max-w-[90vw] text-center">
+            <h2 className="text-[18px] font-bold text-graphite leading-snug mb-2">토스 프로덕트 디자이너 챌린지 2026</h2>
+            <p className="text-[14px] text-slate mb-1">PC 전체화면으로 확인해주세요!</p>
+            <p className="text-[13px] text-stone mb-7">제출자 : 김나은</p>
+            <button
+              onClick={() => {
+                setShowWelcome(false);
+                sessionStorage.setItem("welcome_shown", "true");
+                const synced = localStorage.getItem("calendar_synced");
+                if (!synced) setShowSyncModal(true);
+              }}
+              className="w-full h-12 bg-ink text-white text-[14px] font-bold rounded-[8px] active:bg-black transition-colors duration-150"
+            >
+              확인
+            </button>
+          </div>
+        </div>
+      )}
+
       {showSyncModal && (
-        <CalendarSyncModal
+        <OnboardingModal
           onComplete={() => {
             setShowSyncModal(false);
             localStorage.setItem("calendar_synced", "true");

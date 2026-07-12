@@ -106,7 +106,7 @@ export function Sidebar({ activeNav }: SidebarProps) {
   const currentNav = activeNav || navItems.find((item) => item.href === pathname)?.id || "dashboard";
 
   return (
-    <aside className="w-[240px] shrink-0 h-screen sticky top-0 bg-white shadow-card flex flex-col px-3 py-6">
+    <aside className="h-screen overflow-y-auto bg-white shadow-card flex flex-col px-3 py-6">
       <div className="px-4 mb-8">
         <Link href="/" className="block">
           <h1 className="text-[20px] font-black text-graphite tracking-tight">Corecalendar</h1>

@@ -67,7 +67,7 @@ export default function NotificationsPage() {
                         <span className="text-[14px] font-bold text-graphite shrink-0">{m.title}</span>
 
                         <span className="text-[13px] text-slate tabular-nums shrink-0">
-                          {today.dayLabel}요일 {today.month}/{today.date}
+                          {today.month}/{today.date} {today.dayLabel}요일
                         </span>
                         <span className="text-[13px] font-semibold text-graphite tabular-nums shrink-0">
                           {m.hour}:00 – {m.hour + 1}:00
@@ -90,13 +90,13 @@ export default function NotificationsPage() {
                         <div className="flex items-center gap-2 shrink-0">
                           <button
                             onClick={() => approveAllForMeeting(m.id)}
-                            className="h-8 px-4 bg-ink text-white text-[12px] font-bold rounded-full active:bg-black transition-colors duration-150"
+                            className="h-8 px-4 bg-ink text-white text-[12px] font-bold rounded-[8px] active:bg-black transition-colors duration-150"
                           >
                             승인
                           </button>
                           <button
                             onClick={() => rejectMeeting(m.id)}
-                            className="h-8 px-4 bg-mist text-slate text-[12px] font-bold rounded-full hover:bg-silver transition-colors duration-150"
+                            className="h-8 px-4 bg-mist text-slate text-[12px] font-bold rounded-[8px] hover:bg-silver transition-colors duration-150"
                           >
                             거절
                           </button>
@@ -118,7 +118,7 @@ export default function NotificationsPage() {
                       <span className="text-[14px] font-bold text-graphite shrink-0">스프린트 킥오프</span>
 
                       <span className="text-[13px] text-slate tabular-nums shrink-0">
-                        {today.dayLabel}요일 {today.month}/{today.date}
+                        {today.month}/{today.date} {today.dayLabel}요일
                       </span>
                       <span className="text-[13px] font-semibold text-graphite tabular-nums shrink-0">
                         10:00 – 11:00
@@ -136,13 +136,13 @@ export default function NotificationsPage() {
                       <div className="flex items-center gap-2 shrink-0">
                         <button
                           onClick={() => setDemoResponded("accepted")}
-                          className="h-8 px-4 bg-ink text-white text-[12px] font-bold rounded-full active:bg-black transition-colors duration-150"
+                          className="h-8 px-4 bg-ink text-white text-[12px] font-bold rounded-[8px] active:bg-black transition-colors duration-150"
                         >
                           승인
                         </button>
                         <button
                           onClick={() => setDemoResponded("rejected")}
-                          className="h-8 px-4 bg-mist text-slate text-[12px] font-bold rounded-full hover:bg-silver transition-colors duration-150"
+                          className="h-8 px-4 bg-mist text-slate text-[12px] font-bold rounded-[8px] hover:bg-silver transition-colors duration-150"
                         >
                           거절
                         </button>
@@ -179,7 +179,7 @@ export default function NotificationsPage() {
                         </span>
                         <span className="text-[14px] font-bold text-graphite">{m.title}</span>
                         <span className="text-[13px] text-slate tabular-nums">
-                          {today.dayLabel}요일 {today.month}/{today.date}
+                          {today.month}/{today.date} {today.dayLabel}요일
                         </span>
                         <span className="text-[13px] font-semibold text-graphite tabular-nums">
                           {m.hour}:00 – {m.hour + 1}:00
@@ -212,7 +212,7 @@ export default function NotificationsPage() {
                       </span>
                       <span className="text-[14px] font-bold text-graphite">스프린트 킥오프</span>
                       <span className="text-[13px] text-slate tabular-nums">
-                        {today.dayLabel}요일 {today.month}/{today.date}
+                        {today.month}/{today.date} {today.dayLabel}요일
                       </span>
                       <span className="text-[13px] font-semibold text-graphite tabular-nums">
                         10:00 – 11:00

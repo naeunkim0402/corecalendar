@@ -10,107 +10,55 @@ import { AppShell, Button } from "@/components/ui";
 import { PEOPLE, type Person } from "@/lib/data";
 import { computeRecommendations, useMeetings, type ComputedSlot, type ConfirmedMeeting } from "@/lib/store";
 
-// ── 매칭률 원형 ──
-function MatchCircle({ score, grade, size = 64 }: { score: number; grade: "green" | "yellow"; size?: number }) {
-  const radius = (size - 8) / 2;
-  const circumference = 2 * Math.PI * radius;
-  const offset = circumference - (score / 100) * circumference;
-  const color = grade === "green" ? "#03b26c" : "#fe9800";
-  return (
-    <div className="relative" style={{ width: size, height: size }}>
-      <svg width={size} height={size} className="-rotate-90">
-        <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="#e5e8eb" strokeWidth={4} />
-        <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke={color} strokeWidth={4}
-          strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={offset}
-          className="transition-all duration-700 ease-out" />
-      </svg>
-      <div className="absolute inset-0 flex items-center justify-center">
-        <span className="text-lg font-bold text-graphite tabular-nums">{score}</span>
-      </div>
-    </div>
-  );
-}
+// [설계 의도]: 불필요한 통계적 수치(매칭률)와 텍스트 노이즈를 걷어내고 3열 카드 배치와 전역 레이아웃 고정을 통해,
+// 사용자가 시각적 흔들림 없이 '승인 요청' 액션에만 집중할 수 있도록 UI 밀도를 마감한다.
+
+// [설계 의도]: 조건별 참석자 필터링으로 정보 우선순위를 확립하고, 완료 화면의 요소를 하나의 카드 뷰로 묶어
+// 인지 복잡도를 낮추며, 대시보드의 시간 규격을 TDS 타임 포맷으로 일원화한다.
 
 // ── 추천 카드 ──
-function SlotCard({ slot, isTop, onConfirm, rank }: {
-  slot: ComputedSlot; isTop?: boolean; onConfirm: () => void; rank: number;
+function SlotCard({ slot, onConfirm, rank, selectedPeople }: {
+  slot: ComputedSlot; onConfirm: () => void; rank: number;
+  selectedPeople: Record<string, "required" | "optional">;
 }) {
-  const grade = slot.preferNotCount === 0 ? "green" : "yellow";
+  // 필수: 전원 표시 / 선택: 해당 슬롯에서 참석 가능한 사람만 표시
+  const visiblePeople = PEOPLE.filter((p) => {
+    const attendance = selectedPeople[p.id];
+    if (!attendance) return false;
+    if (attendance === "required") return true;
+    return !slot.absentees.includes(p.name);
+  });
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: rank * 0.1, duration: 0.4 }}
-      className={`rounded-[16px] p-7 transition-all ${isTop
-        ? "bg-white shadow-card-hover"
-        : "bg-white shadow-card hover:shadow-card-hover"
-      }`}
+      className="rounded-[16px] p-6 bg-white shadow-card hover:shadow-card-hover transition-all flex flex-col"
     >
-      <div className="flex items-start justify-between mb-5">
-        <div>
-          {isTop && (
-            <div className="flex items-center gap-2 mb-3">
-              <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[12px] font-bold ${
-                grade === "green" ? "text-success bg-success/10" : "text-warning bg-warning/10"
-              }`}>
-                <span className={`w-1.5 h-1.5 rounded-full ${grade === "green" ? "bg-success" : "bg-warning"}`} />
-                {grade === "green" ? "최적" : "양해 필요"}
-              </span>
-              <span className="text-[12px] font-bold text-stone">TOP PICK</span>
-            </div>
-          )}
-          <h3 className={`${isTop ? "text-[22px]" : "text-[17px]"} font-bold text-graphite tracking-tight`}>
-            {slot.label.split("·")[0].trim()}
-          </h3>
-          <p className={`${isTop ? "text-[15px]" : "text-[13px]"} font-bold text-charcoal mt-1`}>
-            {slot.label.split("·")[1]?.trim()}
-          </p>
-        </div>
-        <MatchCircle score={slot.matchScore} grade={grade} size={isTop ? 72 : 56} />
-      </div>
+      <h3 className="text-[17px] font-bold text-graphite tracking-tight">
+        {slot.label.split("·")[0].trim()}
+      </h3>
+      <p className="text-[13px] font-bold text-charcoal mt-1">
+        {slot.label.split("·")[1]?.trim()}
+      </p>
 
-      <div className="space-y-2 mb-5">
-        <div className="flex items-center gap-2">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <circle cx="8" cy="8" r="6" stroke="#03b26c" strokeWidth="1.4" />
-            <path d="M5.5 8l1.5 1.5L10.5 6" stroke="#03b26c" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-          <span className="text-[12px] font-medium text-charcoal">필수 참석자 전원 가능</span>
-        </div>
-        {slot.preferNotCount === 0 ? (
-          <div className="flex items-center gap-2">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <circle cx="8" cy="8" r="6" stroke="#03b26c" strokeWidth="1.4" />
-              <path d="M5.5 8l1.5 1.5L10.5 6" stroke="#03b26c" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-            <span className="text-[12px] font-medium text-charcoal">조정 충돌 없음</span>
+      <div className="flex items-center gap-1.5 mt-4 mb-5">
+        {visiblePeople.map((p) => (
+          <div
+            key={p.id}
+            className="w-7 h-7 rounded-full flex items-center justify-center text-[12px] font-bold text-white shrink-0"
+            style={{ backgroundColor: p.color }}
+            title={`${p.name} (${selectedPeople[p.id] === "required" ? "필수" : "선택"})`}
+          >
+            {p.avatar}
           </div>
-        ) : (
-          <div className="flex items-center gap-2">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <circle cx="8" cy="8" r="6" stroke="#fe9800" strokeWidth="1.4" />
-              <path d="M8 6v2.5M8 10.5h.01" stroke="#fe9800" strokeWidth="1.4" strokeLinecap="round" />
-            </svg>
-            <span className="text-[12px] font-medium text-warning">조정 {slot.preferNotCount}건</span>
-          </div>
-        )}
+        ))}
       </div>
 
-      <div className="bg-paper rounded-[10px] px-5 py-3.5 mb-5">
-        <p className="text-[12px] text-slate leading-relaxed">{slot.tradeoff}</p>
+      <div className="mt-auto">
+        <Button fullWidth size="md" onClick={onConfirm}>이 시간으로 승인 요청</Button>
       </div>
-
-      <div className="flex items-center gap-2 mb-6 text-[12px] text-stone tabular-nums">
-        참석 {slot.totalAttendees}/{slot.maxAttendees}명
-        {slot.absentees.length > 0 && ` · ${slot.absentees.join(", ")} 불참`}
-      </div>
-
-      {isTop ? (
-        <Button fullWidth size="lg" onClick={onConfirm}>이 시간으로 승인 요청</Button>
-      ) : (
-        <Button fullWidth size="md" variant="secondary" onClick={onConfirm}>이 시간 선택</Button>
-      )}
     </motion.div>
   );
 }
@@ -255,7 +203,7 @@ function MiniCalendarPicker({
             : "날짜를 선택하세요"}
         </span>
         <div className="flex items-center gap-2">
-          <button onClick={onClose} className="h-8 px-3 text-[12px] font-bold text-stone rounded-full hover:bg-mist transition-colors">
+          <button onClick={onClose} className="h-8 px-3 text-[12px] font-bold text-stone rounded-[8px] hover:bg-mist transition-colors">
             취소
           </button>
           <button
@@ -266,7 +214,7 @@ function MiniCalendarPicker({
               }
             }}
             disabled={!tempStart || !tempEnd}
-            className="h-8 px-4 bg-ink text-white text-[12px] font-bold rounded-full disabled:opacity-40 transition-colors"
+            className="h-8 px-4 bg-ink text-white text-[12px] font-bold rounded-[8px] disabled:opacity-40 transition-colors"
           >
             적용
           </button>
@@ -355,7 +303,7 @@ export default function CreateMeetingPage() {
         <header className="sticky top-0 z-20 bg-white/80 backdrop-blur-xl shadow-[0_1px_0_rgba(0,0,0,0.04)]">
           <div className="max-w-[1200px] mx-auto flex items-center justify-between h-16 px-10">
             <h2 className="text-[18px] font-bold text-graphite">
-              {step === "input" ? "새 회의" : step === "recommend" ? "최적 시간 발견" : "확정 완료"}
+              {step === "confirmed" ? "확정 완료" : "새 회의"}
             </h2>
           </div>
         </header>
@@ -393,15 +341,17 @@ export default function CreateMeetingPage() {
                       </div>
                       <div className="relative">
                         <label className="block text-[12px] font-bold text-charcoal mb-2">날짜</label>
+                        <div className="relative">
                         <button
                           onClick={() => setShowDatePicker(!showDatePicker)}
                           className="w-full h-12 px-4 pr-10 bg-paper rounded-[10px] text-[14px] text-graphite text-left tabular-nums hover:bg-mist transition-colors flex items-center"
                         >
                           <span className="flex-1">{dateLabel}</span>
-                          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" className="absolute right-4 top-1/2 -translate-y-1/2">
+                        </button>
+                          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
                             <path d="M4 6l4 4 4-4" stroke="#8b95a1" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
                           </svg>
-                        </button>
+                        </div>
                         {showDatePicker && (
                           <MiniCalendarPicker
                             startDate={dateStart}
@@ -441,7 +391,7 @@ export default function CreateMeetingPage() {
                         <div key={person.id}
                           className="flex items-center gap-3 px-7 py-4 transition-colors duration-150 cursor-pointer hover:bg-paper"
                           onClick={() => togglePerson(person.id)}>
-                          <div className={`w-5 h-5 rounded-[4px] border-2 flex items-center justify-center transition-colors duration-150 shrink-0 ${
+                          <div className={`w-5 h-5 rounded-[8px] border-2 flex items-center justify-center transition-colors duration-150 shrink-0 ${
                             isSelected ? "bg-ink border-ink" : "border-silver"
                           }`}>
                             {isSelected && <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 6l2 2 4-4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>}
@@ -452,16 +402,13 @@ export default function CreateMeetingPage() {
                             <div className="flex items-center gap-1.5">
                               <span className="text-[13px] font-semibold text-graphite">{person.name}</span>
                               <span className="text-[12px] text-stone">{person.role}</span>
-                              {person.id === "e" && isSelected && (
-                                <span className="text-[12px] text-warning bg-warning/10 px-2 py-0.5 rounded-full font-bold">이관 데이터</span>
-                              )}
                             </div>
                           </div>
                           {isSelected && (
                             <div className="flex items-center gap-2 w-[140px] shrink-0" onClick={(e) => e.stopPropagation()}>
                               <button
                                 onClick={() => setAttendance(person.id, "required")}
-                                className={`flex-1 h-8 rounded-full text-[12px] font-bold transition-colors duration-150 ${
+                                className={`flex-1 h-8 rounded-[8px] text-[12px] font-bold transition-colors duration-150 ${
                                   attendance === "required"
                                     ? "bg-ink text-white"
                                     : "bg-mist text-stone hover:bg-silver"
@@ -471,7 +418,7 @@ export default function CreateMeetingPage() {
                               </button>
                               <button
                                 onClick={() => setAttendance(person.id, "optional")}
-                                className={`flex-1 h-8 rounded-full text-[12px] font-bold transition-colors duration-150 ${
+                                className={`flex-1 h-8 rounded-[8px] text-[12px] font-bold transition-colors duration-150 ${
                                   attendance === "optional"
                                     ? "bg-ink text-white"
                                     : "bg-mist text-stone hover:bg-silver"
@@ -499,30 +446,18 @@ export default function CreateMeetingPage() {
             {step === "recommend" && (
               <motion.div key="recommend" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                 <div className="text-center mb-10">
-                  <p className="text-[12px] font-bold text-stone mb-2 tabular-nums">{selectedCount}명의 조건을 분석했어요</p>
                   <h2 className="text-[24px] font-bold text-graphite tracking-tight">
                     최적의 시간 <span className="text-ink font-black">{topSlots.length}개</span>를 찾았어요
                   </h2>
-                  <p className="text-[13px] text-stone mt-2 tabular-nums">
-                    {recommendations.length}개 가능 슬롯 중 상위 매칭률 순
+                  <p className="text-[13px] text-stone mt-2">
+                    아래 추천 시간 중 선택해보세요!
                   </p>
                 </div>
 
-                <div className="flex items-center justify-center gap-6 mb-8">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-success" />
-                    <span className="text-[12px] font-medium text-slate">최적</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-warning" />
-                    <span className="text-[12px] font-medium text-slate">양해 필요</span>
-                  </div>
-                </div>
-
-                <div className="space-y-5">
+                <div className="grid grid-cols-3 gap-4">
                   {topSlots.map((slot, i) => (
-                    <SlotCard key={`${slot.day}-${slot.hour}`} slot={slot} rank={i} isTop={i === 0}
-                      onConfirm={() => handleConfirm(slot)} />
+                    <SlotCard key={`${slot.day}-${slot.hour}`} slot={slot} rank={i}
+                      selectedPeople={selectedPeople} onConfirm={() => handleConfirm(slot)} />
                   ))}
                 </div>
 
@@ -536,59 +471,30 @@ export default function CreateMeetingPage() {
             {/* STEP 3 */}
             {step === "confirmed" && confirmedSlot && (
               <motion.div key="confirmed" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
-                <div className="text-center mb-10">
+                <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm max-w-[480px] mx-auto text-center">
                   <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 200, delay: 0.1 }}
-                    className="w-20 h-20 rounded-full bg-success/8 flex items-center justify-center mx-auto mb-6">
-                    <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+                    className="w-16 h-16 rounded-full bg-success/8 flex items-center justify-center mx-auto mb-5">
+                    <svg width="32" height="32" viewBox="0 0 40 40" fill="none">
                       <circle cx="20" cy="20" r="16" stroke="#03b26c" strokeWidth="2.5" />
                       <motion.path d="M13 20l4 4 10-10" stroke="#03b26c" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"
                         initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ delay: 0.3, duration: 0.5 }} />
                     </svg>
                   </motion.div>
-                  <h2 className="text-[24px] font-bold text-graphite mb-2">승인 요청을 보냈어요</h2>
+                  <h2 className="text-[22px] font-bold text-graphite mb-2">승인 요청을 보냈어요</h2>
                   <p className="text-[14px] text-slate mb-1">{title}</p>
                   <p className="text-[17px] font-bold text-graphite">{confirmedSlot.label}</p>
-                  <p className="text-[12px] text-stone mt-2 tabular-nums">매칭률 {confirmedSlot.matchScore}% · 참석자 전원 수락 시 자동 확정</p>
-                </div>
+                  <p className="text-[12px] text-stone mt-2 mb-6">필수 참석자 전원 수락 시 자동 확정</p>
 
-                <div className="bg-white rounded-[16px] shadow-card p-7 mb-6">
-                  <h3 className="text-[12px] font-bold text-stone uppercase tracking-wider mb-5">진행 상태</h3>
-                  <div className="space-y-3.5">
-                    {[
-                      "참석자 전원에게 승인 요청 알림 발송",
-                      "알림 페이지에서 수락/거절 대기 중",
-                      "전원 수락 시 → 시간표 자동 불가 반영",
-                      "다음 회의부터 갱신된 시간표로 추천",
-                    ].map((item, i) => (
-                      <div key={i} className="flex items-start gap-3">
-                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="mt-0.5 shrink-0">
-                          <circle cx="8" cy="8" r="6" stroke="#03b26c" strokeWidth="1.4" />
-                          <path d="M5.5 8l1.5 1.5L10.5 6" stroke="#03b26c" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                        <span className="text-[13px] text-slate">{item}</span>
-                      </div>
-                    ))}
+                  <div className="flex gap-3">
+                    <Button variant="secondary" size="lg" fullWidth onClick={() => router.push("/")}>
+                      대시보드
+                    </Button>
+                    <Button size="lg" fullWidth onClick={() => {
+                      setStep("input"); setTitle(""); setConfirmedSlot(null);
+                    }}>
+                      다음 회의 만들기
+                    </Button>
                   </div>
-                </div>
-
-                <div className="bg-graphite rounded-[16px] p-7 text-white mb-6">
-                  <p className="text-[12px] font-bold text-white/60 uppercase tracking-wider mb-2">비동기 승인 → 플라이휠</p>
-                  <p className="text-[14px] font-semibold leading-[1.7]">
-                    알림 페이지에서 참석자 시점으로 수락해보세요.<br />
-                    <span className="text-white/50">전원 수락 시 슬롯 자동 불가 처리 →</span>{" "}
-                    <span className="text-white font-bold">다음 회의는 다른 시간이 추천됩니다</span>
-                  </p>
-                </div>
-
-                <div className="flex gap-3">
-                  <Button variant="secondary" size="lg" fullWidth onClick={() => router.push("/")}>
-                    대시보드
-                  </Button>
-                  <Button size="lg" fullWidth onClick={() => {
-                    setStep("input"); setTitle(""); setConfirmedSlot(null);
-                  }}>
-                    다음 회의 만들기
-                  </Button>
                 </div>
               </motion.div>
             )}

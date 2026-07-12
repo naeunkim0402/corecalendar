@@ -16,8 +16,11 @@ export function ReviewerGuidePanel() {
             <span className="text-[16px]">📋</span>
             담당자 데모 가이드
           </h4>
-          <p className="text-[11px] text-white/50 leading-[1.7]">
+          <p className="text-[14px] text-white/50 leading-[1.7]">
             Corecalendar로 한번에 조율되는 최적의 회의시간 찾기!
+          </p>
+          <p className="text-[12px] text-white/35 leading-[1.7] mt-1">
+            더 고도화된 서비스가 궁금하시다면 직무 인터뷰에서 보여드릴게요!
           </p>
         </div>
 
@@ -30,7 +33,7 @@ export function ReviewerGuidePanel() {
           >
             <div className="flex items-center gap-3 mb-2">
               <span className="w-6 h-6 rounded-[6px] bg-[#3182f6] text-white text-[11px] font-bold flex items-center justify-center shrink-0">1</span>
-              <span className="text-[12px] font-bold text-white group-hover:text-[#3182f6] transition-colors duration-150">6인 회의 바로 만들기</span>
+              <span className="text-[15px] font-bold text-white group-hover:text-[#3182f6] transition-colors duration-150">6인 회의 바로 만들기</span>
             </div>
             <p className="text-[15px] text-white/40 ml-9 leading-[1.6]">
               회의 생성 → 참석자 선택 → 매칭률 기반 실시간 추천
@@ -41,7 +44,7 @@ export function ReviewerGuidePanel() {
           <div className="w-full text-left px-4 py-4 rounded-2xl bg-white/[0.06] border border-white/[0.08]">
             <div className="flex items-center gap-3 mb-2">
               <span className="w-6 h-6 rounded-[6px] bg-[#fe9800] text-white text-[11px] font-bold flex items-center justify-center shrink-0">2</span>
-              <span className="text-[12px] font-bold text-white">플라이휠 효과 검증</span>
+              <span className="text-[15px] font-bold text-white">플라이휠 효과 검증</span>
             </div>
             <p className="text-[15px] text-white/40 ml-9 leading-[1.6]">
               회의 확정 → 참석자 시간표 자동 불가 처리 → 다음 추천 시 해당 슬롯 자동 배제
@@ -55,7 +58,7 @@ export function ReviewerGuidePanel() {
           >
             <div className="flex items-center gap-3 mb-2">
               <span className="w-6 h-6 rounded-[6px] bg-[#f04452] text-white text-[11px] font-bold flex items-center justify-center shrink-0">3</span>
-              <span className="text-[12px] font-bold text-white group-hover:text-[#f04452] transition-colors duration-150">데이터 완전 리셋</span>
+              <span className="text-[15px] font-bold text-white group-hover:text-[#f04452] transition-colors duration-150">데이터 완전 리셋</span>
             </div>
             <p className="text-[15px] text-white/40 ml-9 leading-[1.6]">
               확정 회의 전체 삭제 · 초기 상태로 복원

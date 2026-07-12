@@ -380,25 +380,25 @@ export default function TimetablePage() {
 
           {/* ── 24시간 시간표 그리드 ── */}
           <div className="bg-white rounded-[16px] border border-[#e5e8eb] p-6 select-none">
-            {/* 요일 헤더 */}
-            <div className="grid grid-cols-[56px_repeat(5,1fr)]">
-              <div />
-              {DAYS.map((day, i) => (
-                <div key={i} className="text-center py-2.5 border-b border-l border-[#e5e8eb]">
-                  <span className="text-[12px] font-bold text-[#191f28]">{day}</span>
-                  <span className="block text-[10px] text-[#8b95a1] mt-0.5 tabular-nums">
-                    {weekInfo.dates[i].month}/{weekInfo.dates[i].date}
-                  </span>
-                </div>
-              ))}
-            </div>
-
-            {/* 스크롤 영역 */}
+            {/* 스크롤 영역 (헤더 포함) */}
             <div
               ref={gridRef}
               className="overflow-y-auto overscroll-contain"
-              style={{ maxHeight: "520px" }}
+              style={{ maxHeight: "564px" }}
             >
+              {/* 요일 헤더 */}
+              <div className="grid grid-cols-[56px_repeat(5,1fr)] sticky top-0 z-10 bg-white">
+                <div />
+                {DAYS.map((day, i) => (
+                  <div key={i} className="text-center py-2.5 border-b border-l border-[#e5e8eb]">
+                    <span className="text-[12px] font-bold text-[#191f28]">{day}</span>
+                    <span className="block text-[10px] text-[#8b95a1] mt-0.5 tabular-nums">
+                      {weekInfo.dates[i].month}/{weekInfo.dates[i].date}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
               <div className="grid grid-cols-[56px_repeat(5,1fr)]">
                 {HOURS.map((hour) => {
                   const offHour = isOffHour(hour);

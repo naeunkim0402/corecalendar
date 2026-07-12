@@ -18,23 +18,89 @@ const TAG_COLORS: Record<ScheduleTag, { active: string; inactive: string }> = {
   원온원: { active: "bg-ink text-white", inactive: "bg-mist text-slate hover:bg-silver" },
 };
 
+// ── 커스텀 드롭다운 ──
+function CustomSelect<T extends string | number>({
+  value,
+  onChange,
+  options,
+  placeholder,
+}: {
+  value: T;
+  onChange: (v: T) => void;
+  options: { value: T; label: string }[];
+  placeholder?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const selected = options.find((o) => o.value === value);
+
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className={`w-full h-12 px-4 bg-paper rounded-[10px] text-[13px] text-left flex items-center justify-between transition-all ${
+          open ? "ring-2 ring-ink/10 bg-white" : ""
+        }`}
+      >
+        <span className={selected ? "text-graphite font-medium tabular-nums" : "text-stone"}>
+          {selected?.label || placeholder || "선택"}
+        </span>
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className={`text-slate transition-transform duration-150 ${open ? "rotate-180" : ""}`}>
+          <path d="M4 5.5l3 3 3-3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </button>
+      {open && (
+        <div className="absolute left-0 right-0 top-[calc(100%+4px)] bg-white rounded-[12px] shadow-modal border border-silver/60 py-1 z-50 max-h-[200px] overflow-y-auto">
+          {options.map((o) => (
+            <button
+              key={String(o.value)}
+              type="button"
+              onClick={() => { onChange(o.value); setOpen(false); }}
+              className={`w-full text-left px-4 py-2.5 text-[13px] transition-colors duration-100 flex items-center justify-between tabular-nums ${
+                value === o.value ? "bg-mist font-semibold text-graphite" : "text-graphite hover:bg-paper"
+              }`}
+            >
+              <span>{o.label}</span>
+              {value === o.value && (
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="text-ink shrink-0">
+                  <path d="M3 7.5l3 3 5-6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── 일정 등록 모달 ──
 function AddScheduleModal({
   onClose,
   onSubmit,
 }: {
   onClose: () => void;
-  onSubmit: (title: string, tag: ScheduleTag, day: number, hour: number) => void;
+  onSubmit: (title: string, tag: ScheduleTag, day: number, startHour: number, endHour: number) => void;
 }) {
   const [title, setTitle] = useState("");
   const [tag, setTag] = useState<ScheduleTag>("회의");
   const [day, setDay] = useState(0);
-  const [hour, setHour] = useState(10);
+  const [startHour, setStartHour] = useState(10);
+  const [endHour, setEndHour] = useState(11);
   const [submitted, setSubmitted] = useState(false);
 
   const handleSubmit = () => {
-    if (!title.trim()) return;
-    onSubmit(title.trim(), tag, day, hour);
+    if (!title.trim() || endHour <= startHour) return;
+    onSubmit(title.trim(), tag, day, startHour, endHour);
     setSubmitted(true);
     setTimeout(() => onClose(), 1000);
   };
@@ -95,30 +161,39 @@ function AddScheduleModal({
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 mb-7">
-              <div>
-                <label className="block text-[12px] font-bold text-slate mb-2">요일</label>
-                <select
-                  value={day}
-                  onChange={(e) => setDay(Number(e.target.value))}
-                  className="w-full h-12 px-4 bg-paper rounded-[10px] text-[13px] text-graphite focus:outline-none focus:ring-2 focus:ring-ink/10 transition-all appearance-none"
-                >
-                  {["월요일", "화요일", "수요일", "목요일", "금요일"].map((d, i) => (
-                    <option key={i} value={i}>{d}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-[12px] font-bold text-slate mb-2">시간</label>
-                <select
-                  value={hour}
-                  onChange={(e) => setHour(Number(e.target.value))}
-                  className="w-full h-12 px-4 bg-paper rounded-[10px] text-[13px] text-graphite focus:outline-none focus:ring-2 focus:ring-ink/10 transition-all appearance-none tabular-nums"
-                >
-                  {HOURS.map((h) => (
-                    <option key={h} value={h}>{h.toString().padStart(2, "0")}:00 – {(h + 1).toString().padStart(2, "0")}:00</option>
-                  ))}
-                </select>
+            <div className="mb-5">
+              <label className="block text-[12px] font-bold text-slate mb-2">요일</label>
+              <CustomSelect
+                value={day}
+                onChange={setDay}
+                options={["월요일", "화요일", "수요일", "목요일", "금요일"].map((d, i) => ({ value: i, label: d }))}
+              />
+            </div>
+
+            <div className="mb-7">
+              <label className="block text-[12px] font-bold text-slate mb-2">시간</label>
+              <div className="flex items-center gap-3">
+                <div className="flex-1">
+                  <CustomSelect
+                    value={startHour}
+                    onChange={(v) => {
+                      setStartHour(v);
+                      if (endHour <= v) setEndHour(v + 1);
+                    }}
+                    options={HOURS.map((h) => ({ value: h, label: `${h.toString().padStart(2, "0")}:00` }))}
+                  />
+                </div>
+                <span className="text-[13px] font-bold text-slate shrink-0">–</span>
+                <div className="flex-1">
+                  <CustomSelect
+                    value={endHour}
+                    onChange={setEndHour}
+                    options={[
+                      ...HOURS.filter((h) => h > startHour).map((h) => ({ value: h, label: `${h.toString().padStart(2, "0")}:00` })),
+                      { value: 24, label: "24:00" },
+                    ]}
+                  />
+                </div>
               </div>
             </div>
 
@@ -489,24 +564,34 @@ function TimetableContent() {
       {showAddModal && (
         <AddScheduleModal
           onClose={() => setShowAddModal(false)}
-          onSubmit={(title, tag, day, hour) => {
-            const key = `${day}-${hour}`;
-            const newTable = { ...timetable, [key]: "unavailable" as SlotState };
+          onSubmit={(title, tag, day, startHour, endHour) => {
+            const newTable = { ...timetable };
+            for (let h = startHour; h < endHour; h++) {
+              newTable[`${day}-${h}`] = "unavailable" as SlotState;
+            }
             update(newTable);
 
             const schedules = JSON.parse(localStorage.getItem("internal_schedules") || "[]");
-            schedules.push({
-              id: Date.now().toString(),
-              title,
-              tag,
-              day,
-              hour,
-              personId: viewingPerson,
-              createdAt: new Date().toISOString(),
-            });
+            for (let h = startHour; h < endHour; h++) {
+              schedules.push({
+                id: `${Date.now()}-${h}`,
+                title,
+                tag,
+                day,
+                hour: h,
+                personId: viewingPerson,
+                createdAt: new Date().toISOString(),
+              });
+            }
             localStorage.setItem("internal_schedules", JSON.stringify(schedules));
 
-            setSlotTags((prev) => ({ ...prev, [key]: tag }));
+            setSlotTags((prev) => {
+              const updated = { ...prev };
+              for (let h = startHour; h < endHour; h++) {
+                updated[`${day}-${h}`] = tag;
+              }
+              return updated;
+            });
           }}
         />
       )}

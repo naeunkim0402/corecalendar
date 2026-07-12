@@ -32,7 +32,7 @@ export default function NotificationsPage() {
         <header className="sticky top-0 z-20 bg-white/80 backdrop-blur-xl shadow-[0_1px_0_rgba(0,0,0,0.04)]">
           <div className="max-w-[1200px] mx-auto flex items-center justify-between h-16 px-10">
             <div className="flex items-center gap-3">
-              <h2 className="text-[18px] font-bold text-graphite">알림</h2>
+              <h2 className="text-[18px] font-bold text-graphite">요청 회의건</h2>
               {pendingMeetings.length > 0 && (
                 <span className="min-w-[20px] h-[20px] px-1.5 rounded-full bg-error text-white text-[12px] font-bold flex items-center justify-center">
                   {pendingMeetings.length}

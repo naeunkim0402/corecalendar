@@ -3,7 +3,7 @@
 // [설계 의도]: 장식적인 dot UI와 서술형 문구를 걷어내어 정보 밀도를 극대화하고,
 // 드롭다운 아이콘 및 캘린더 피커의 인터랙션을 일관되게 정제하여 정품 B2B SaaS의 시각적 완성도를 부여한다.
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { AppShell, Button } from "@/components/ui";
@@ -225,6 +225,67 @@ function MiniCalendarPicker({
 }
 
 // ── Duration options ──
+// ── 커스텀 드롭다운 ──
+function CustomSelect<T extends string | number>({
+  value,
+  onChange,
+  options,
+}: {
+  value: T;
+  onChange: (v: T) => void;
+  options: { value: T; label: string }[];
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const selected = options.find((o) => o.value === value);
+
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className={`w-full h-12 px-4 bg-paper rounded-[10px] text-[14px] text-left flex items-center justify-between transition-all ${
+          open ? "ring-2 ring-ink/10 bg-white" : ""
+        }`}
+      >
+        <span className="text-graphite font-medium">{selected?.label || "선택"}</span>
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className={`text-slate transition-transform duration-150 ${open ? "rotate-180" : ""}`}>
+          <path d="M4 5.5l3 3 3-3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </button>
+      {open && (
+        <div className="absolute left-0 right-0 top-[calc(100%+4px)] bg-white rounded-[12px] shadow-modal border border-silver/60 py-1 z-50 max-h-[200px] overflow-y-auto">
+          {options.map((o) => (
+            <button
+              key={String(o.value)}
+              type="button"
+              onClick={() => { onChange(o.value); setOpen(false); }}
+              className={`w-full text-left px-4 py-2.5 text-[13px] transition-colors duration-100 flex items-center justify-between ${
+                value === o.value ? "bg-mist font-semibold text-graphite" : "text-graphite hover:bg-paper"
+              }`}
+            >
+              <span>{o.label}</span>
+              {value === o.value && (
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="text-ink shrink-0">
+                  <path d="M3 7.5l3 3 5-6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 const DURATION_OPTIONS = [
   { label: "30분", value: 30 },
   { label: "1시간", value: 60 },
@@ -324,20 +385,11 @@ export default function CreateMeetingPage() {
                     <div className="grid grid-cols-2 gap-5">
                       <div className="relative">
                         <label className="block text-[12px] font-bold text-charcoal mb-2">소요 시간</label>
-                        <div className="relative">
-                          <select
-                            value={duration}
-                            onChange={(e) => setDuration(Number(e.target.value))}
-                            className="w-full h-12 px-4 pr-10 bg-paper rounded-[10px] text-[14px] text-graphite text-left focus:outline-none focus:ring-2 focus:ring-ink/10 transition-all cursor-pointer appearance-none"
-                          >
-                            {DURATION_OPTIONS.map((opt) => (
-                              <option key={opt.value} value={opt.value}>{opt.label}</option>
-                            ))}
-                          </select>
-                          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                            <path d="M4 6l4 4 4-4" stroke="#8b95a1" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
-                        </div>
+                        <CustomSelect
+                          value={duration}
+                          onChange={setDuration}
+                          options={DURATION_OPTIONS}
+                        />
                       </div>
                       <div className="relative">
                         <label className="block text-[12px] font-bold text-charcoal mb-2">날짜</label>

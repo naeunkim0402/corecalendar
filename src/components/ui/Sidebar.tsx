@@ -92,7 +92,7 @@ export function Sidebar({ activeNav }: SidebarProps) {
     {
       id: "notifications",
       href: "/notifications",
-      label: "알림",
+      label: "요청 회의건",
       badge: pendingCount,
       icon: (
         <svg width="20" height="20" viewBox="0 0 20 20" fill="none">

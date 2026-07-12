@@ -379,7 +379,7 @@ export default function CreateMeetingPage() {
                         <select
                           value={duration}
                           onChange={(e) => setDuration(Number(e.target.value))}
-                          className="w-full h-12 px-4 bg-[#f9fafb] rounded-[10px] text-[14px] text-[#191f28] border border-[#e5e8eb] focus:outline-none focus:ring-2 focus:ring-[#3182f6]/30 transition-all appearance-none cursor-pointer"
+                          className="w-full h-12 px-4 bg-[#f9fafb] rounded-[10px] text-[14px] text-[#191f28] border border-[#e5e8eb] focus:outline-none focus:ring-2 focus:ring-[#3182f6]/30 transition-all cursor-pointer"
                         >
                           {DURATION_OPTIONS.map((opt) => (
                             <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -451,7 +451,6 @@ export default function CreateMeetingPage() {
                                 <span className="text-[10px] text-[#fe9800] bg-[rgba(254,152,0,0.1)] px-2 py-0.5 rounded-[8px] font-bold">이관 데이터</span>
                               )}
                             </div>
-                            <p className="text-[11px] text-[#b0b8c1] mt-0.5 truncate">{person.description}</p>
                           </div>
                           {isSelected && (
                             <div className="flex items-center w-[120px] shrink-0" onClick={(e) => e.stopPropagation()}>

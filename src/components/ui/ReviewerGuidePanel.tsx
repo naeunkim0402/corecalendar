@@ -17,7 +17,7 @@ export function ReviewerGuidePanel() {
             담당자 데모 가이드
           </h4>
           <p className="text-[11px] text-white/50 leading-[1.7]">
-            Corecalendar가 메신저 핑퐁과 조율 노동을 어떻게 원천 소멸시키는지 아래 시나리오대로 원클릭 검증해 보세요.
+            Corecalendar로 한번에 조율되는 최적의 회의시간 찾기!
           </p>
         </div>
 
@@ -32,7 +32,7 @@ export function ReviewerGuidePanel() {
               <span className="w-6 h-6 rounded-[6px] bg-[#3182f6] text-white text-[11px] font-bold flex items-center justify-center shrink-0">1</span>
               <span className="text-[12px] font-bold text-white group-hover:text-[#3182f6] transition-colors duration-150">6인 회의 바로 만들기</span>
             </div>
-            <p className="text-[10px] text-white/40 ml-9 leading-[1.6]">
+            <p className="text-[15px] text-white/40 ml-9 leading-[1.6]">
               회의 생성 → 참석자 선택 → 매칭률 기반 실시간 추천
             </p>
           </button>
@@ -43,7 +43,7 @@ export function ReviewerGuidePanel() {
               <span className="w-6 h-6 rounded-[6px] bg-[#fe9800] text-white text-[11px] font-bold flex items-center justify-center shrink-0">2</span>
               <span className="text-[12px] font-bold text-white">플라이휠 효과 검증</span>
             </div>
-            <p className="text-[10px] text-white/40 ml-9 leading-[1.6]">
+            <p className="text-[15px] text-white/40 ml-9 leading-[1.6]">
               회의 확정 → 참석자 시간표 자동 불가 처리 → 다음 추천 시 해당 슬롯 자동 배제
             </p>
           </div>
@@ -57,7 +57,7 @@ export function ReviewerGuidePanel() {
               <span className="w-6 h-6 rounded-[6px] bg-[#f04452] text-white text-[11px] font-bold flex items-center justify-center shrink-0">3</span>
               <span className="text-[12px] font-bold text-white group-hover:text-[#f04452] transition-colors duration-150">데이터 완전 리셋</span>
             </div>
-            <p className="text-[10px] text-white/40 ml-9 leading-[1.6]">
+            <p className="text-[15px] text-white/40 ml-9 leading-[1.6]">
               확정 회의 전체 삭제 · 초기 상태로 복원
             </p>
           </button>

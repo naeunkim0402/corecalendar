@@ -8,6 +8,7 @@ import { AppShell } from "@/components/ui";
 import { PEOPLE } from "@/lib/data";
 import { useMeetings } from "@/lib/store";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 const DAY_LABELS_FULL = ["일", "월", "화", "수", "목", "금", "토"];
 
@@ -120,6 +121,7 @@ function OnboardingModal({ onComplete }: { onComplete: () => void }) {
 }
 
 export default function Home() {
+  const router = useRouter();
   const { meetings, deleteMeeting, clearAll, loaded } = useMeetings();
   const [showSyncModal, setShowSyncModal] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
@@ -372,6 +374,7 @@ export default function Home() {
           onComplete={() => {
             setShowSyncModal(false);
             localStorage.setItem("calendar_synced", "true");
+            router.push("/timetable");
           }}
         />
       )}

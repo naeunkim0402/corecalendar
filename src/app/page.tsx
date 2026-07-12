@@ -5,37 +5,11 @@
 
 import { useState, useEffect } from "react";
 import { AppShell } from "@/components/ui";
-import { PEOPLE, SYNC_STATUS_CONFIG, type ConstraintTag } from "@/lib/data";
+import { PEOPLE } from "@/lib/data";
 import { useMeetings } from "@/lib/store";
 import Link from "next/link";
 
 const DAY_LABELS = ["월", "화", "수", "목", "금"];
-
-// ── 제약 조건 태그 (TDS Weak Badge) ──
-const TAG_STYLES: Record<ConstraintTag["type"], string> = {
-  critical: "bg-[rgba(239,68,68,0.15)] text-[#dc2626]",
-  warning: "bg-[rgba(254,152,0,0.15)] text-[#fe9800]",
-  neutral: "bg-[rgba(2,32,71,0.05)] text-[#4e5968]",
-};
-
-function ConstraintTagChip({ tag }: { tag: ConstraintTag }) {
-  return (
-    <span className={`inline-flex items-center px-[7px] py-[3px] rounded-[12px] text-[10px] font-bold ${TAG_STYLES[tag.type]}`}>
-      {tag.text}
-    </span>
-  );
-}
-
-// ── 플랫폼 상태 인디케이터 ──
-function SyncIndicator({ status }: { status: keyof typeof SYNC_STATUS_CONFIG }) {
-  const config = SYNC_STATUS_CONFIG[status];
-  return (
-    <div className="flex items-center gap-1.5 shrink-0">
-      <span className={`w-1.5 h-1.5 rounded-full ${config.dot} ${status === "active_internal" ? "animate-pulse" : ""}`} />
-      <span className={`text-[10px] font-semibold ${config.color}`}>{config.label}</span>
-    </div>
-  );
-}
 
 // [설계 의도]: 최초 1회 이관 팝업으로 진입 장벽을 낮추고, 내부 일정 등록 모달을 통해
 // 모든 비즈니스 스케줄을 이 앱 안으로 락인(Lock-in)시키는 올인원 제품 구조를 완비한다.
@@ -336,70 +310,6 @@ export default function Home() {
             </section>
           )}
 
-          {/* ── 팀 멤버 ── */}
-          <section className="mb-14">
-            <div className="flex items-center justify-between mb-5 px-1">
-              <div>
-                <h3 className="text-[17px] font-bold text-[#191f28]">
-                  팀 멤버 <span className="text-[#b0b8c1] font-bold ml-1.5 tabular-nums text-[15px]">{PEOPLE.length}</span>
-                </h3>
-                <p className="text-[13px] text-[#8b95a1] mt-0.5">참석자별 제약 조건과 연동 상태를 확인합니다</p>
-              </div>
-              <div className="flex items-center gap-5">
-                <span className="flex items-center gap-1.5 text-[11px] text-[#8b95a1]">
-                  <span className="w-2 h-2 rounded-full bg-[#3182f6]" /> 필수
-                </span>
-                <span className="flex items-center gap-1.5 text-[11px] text-[#8b95a1]">
-                  <span className="w-2 h-2 rounded-full bg-[#d1d6db]" /> 선택
-                </span>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-t-[16px] border border-b-0 border-[#e5e8eb] px-7 py-3.5 flex items-center gap-4">
-              <span className="w-9" />
-              <span className="w-[140px] text-[11px] font-bold text-[#8b95a1]">이름</span>
-              <span className="flex-1 text-[11px] font-bold text-[#8b95a1]">설명</span>
-              <span className="w-[200px] text-[11px] font-bold text-[#8b95a1]">제약 조건</span>
-              <span className="w-20 text-[11px] font-bold text-[#8b95a1] text-right">상태</span>
-            </div>
-
-            <div className="bg-white rounded-b-[16px] border border-t-0 border-[#e5e8eb] divide-y divide-[#f2f4f6]">
-              {PEOPLE.map((person) => (
-                <div
-                  key={person.id}
-                  className="px-7 py-5 flex items-center gap-4 transition-colors duration-150 hover:bg-[#f9fafb]"
-                >
-                  <div
-                    className={`w-9 h-9 rounded-full flex items-center justify-center text-[11px] font-bold text-white ring-2 ring-offset-2 shrink-0 ${
-                      person.attendance === "required" ? "ring-[#3182f6]" : "ring-[#e5e8eb]"
-                    }`}
-                    style={{ backgroundColor: person.color }}
-                  >
-                    {person.avatar}
-                  </div>
-
-                  <div className="w-[140px] shrink-0">
-                    <span className="text-[13px] font-semibold text-[#191f28] block">{person.name}</span>
-                    <span className="text-[11px] text-[#8b95a1] mt-0.5 block">{person.role}</span>
-                  </div>
-
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[12px] text-[#6b7684] leading-relaxed truncate">{person.description}</p>
-                  </div>
-
-                  <div className="w-[200px] shrink-0 flex flex-wrap gap-1">
-                    {person.tags.map((tag, i) => (
-                      <ConstraintTagChip key={i} tag={tag} />
-                    ))}
-                  </div>
-
-                  <div className="w-20 flex justify-end">
-                    <SyncIndicator status={person.syncStatus} />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
         </div>
       </main>
 

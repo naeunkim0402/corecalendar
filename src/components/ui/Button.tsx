@@ -11,19 +11,17 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   fullWidth?: boolean;
 }
 
-// TDS Button: variant × size. Fill Primary = #3182f6, Weak Dark = rgba(2,32,71,0.05)
 const variantStyles: Record<Variant, string> = {
-  primary: "bg-[#3182f6] text-white active:bg-[#2272eb]",
-  secondary: "bg-[rgba(2,32,71,0.05)] text-[#4e5968] active:bg-[rgba(2,32,71,0.1)]",
-  ghost: "bg-transparent text-[#6b7684] active:bg-[rgba(2,32,71,0.05)]",
-  danger: "bg-[rgba(251,136,144,0.15)] text-[#e42939] active:bg-[rgba(251,136,144,0.25)]",
+  primary: "bg-ink text-white active:bg-black",
+  secondary: "bg-mist text-charcoal active:bg-silver",
+  ghost: "bg-transparent text-slate active:bg-mist",
+  danger: "bg-error/10 text-error active:bg-error/20",
 };
 
-// TDS size scale: sm 32px/8px, md 38px/10px, lg 48px/14px, xlarge 56px/16px
 const sizeStyles: Record<Size, string> = {
-  sm: "h-8 px-3 text-[13px] rounded-[8px]",
-  md: "h-[38px] px-5 text-[15px] rounded-[10px]",
-  lg: "h-14 px-5 text-[17px] rounded-[16px]",
+  sm: "h-8 px-4 text-[13px] rounded-full",
+  md: "h-10 px-5 text-[14px] rounded-full",
+  lg: "h-12 px-6 text-[15px] rounded-full",
 };
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(

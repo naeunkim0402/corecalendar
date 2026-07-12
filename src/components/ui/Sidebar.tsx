@@ -17,13 +17,13 @@ function NavItem({ icon, label, href, active, badge }: NavItemProps & { badge?: 
       href={href}
       className={`
         flex items-center gap-3 w-full px-4 py-2.5 rounded-[10px] text-[14px] font-medium transition-colors duration-100
-        ${active ? "bg-toss-blue-50 text-toss-blue" : "text-gray-600 hover:bg-gray-100 active:bg-gray-200"}
+        ${active ? "bg-mist text-ink font-semibold" : "text-slate hover:bg-mist active:bg-silver"}
       `}
     >
       {icon}
       <span className="flex-1">{label}</span>
       {badge != null && badge > 0 && (
-        <span className="min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center">
+        <span className="min-w-[18px] h-[18px] px-1 rounded-full bg-error text-white text-[12px] font-bold flex items-center justify-center">
           {badge}
         </span>
       )}
@@ -39,7 +39,6 @@ export function Sidebar({ activeNav }: SidebarProps) {
   const pathname = usePathname();
   const [pendingCount, setPendingCount] = useState(0);
 
-  // pending 회의 수 계산 (폴링)
   useEffect(() => {
     const check = () => {
       try {
@@ -107,11 +106,11 @@ export function Sidebar({ activeNav }: SidebarProps) {
   const currentNav = activeNav || navItems.find((item) => item.href === pathname)?.id || "dashboard";
 
   return (
-    <aside className="w-[240px] shrink-0 h-screen sticky top-0 border-r border-[#e5e8eb] bg-white flex flex-col px-3 py-6">
+    <aside className="w-[240px] shrink-0 h-screen sticky top-0 bg-white shadow-card flex flex-col px-3 py-6">
       <div className="px-4 mb-8">
         <Link href="/" className="block">
-          <h1 className="text-[20px] font-black text-gray-900 tracking-tight">Corecalendar</h1>
-          <p className="text-[11px] font-semibold text-toss-blue tracking-wider uppercase mt-0.5">All-in-One Scheduling</p>
+          <h1 className="text-[20px] font-black text-graphite tracking-tight">Corecalendar</h1>
+          <p className="text-[12px] font-semibold text-stone tracking-wider uppercase mt-0.5">All-in-One Scheduling</p>
         </Link>
       </div>
 
@@ -128,14 +127,14 @@ export function Sidebar({ activeNav }: SidebarProps) {
         ))}
       </nav>
 
-      <div className="px-4 py-3 border-t border-[#e5e8eb]">
+      <div className="px-4 py-3 border-t border-mist">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-[#3182f6] flex items-center justify-center text-white text-[12px] font-bold">
-            소
+          <div className="w-8 h-8 rounded-full bg-ink flex items-center justify-center text-white text-[12px] font-bold">
+            나
           </div>
           <div>
-            <span className="text-[13px] font-semibold text-gray-800 block">한소영</span>
-            <span className="text-[11px] text-gray-400">PM · 주최자</span>
+            <span className="text-[13px] font-semibold text-graphite block">김나은</span>
+            <span className="text-[12px] text-stone">프로덕트 디자이너</span>
           </div>
         </div>
       </div>

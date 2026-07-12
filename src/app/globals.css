@@ -1,44 +1,35 @@
 @import "tailwindcss";
 
-/* ── TDS (Toss Design System) Tokens ── */
+/* ── Corecalendar Design Tokens (Monochrome Utility) ── */
 @theme inline {
-  /* Primary Interactive — Toss Blue #3182f6, pressed #2272eb */
-  --color-toss-blue: #3182f6;
-  --color-toss-blue-light: #e8f3ff;
-  --color-toss-blue-dark: #2272eb;
-  --color-toss-blue-50: #e8f3ff;
-  --color-toss-blue-100: rgba(100, 168, 255, 0.15);
+  /* Monochrome Scale */
+  --color-ink: #101010;
+  --color-graphite: #191f28;
+  --color-charcoal: #333d4b;
+  --color-slate: #6b7684;
+  --color-stone: #8b95a1;
+  --color-silver: #e5e8eb;
+  --color-mist: #f2f4f6;
+  --color-paper: #f9fafb;
 
-  /* Grey Scale (TDS OKLCH 10-step, warm undertones) */
-  --color-gray-50: #f9fafb;
-  --color-gray-100: #f2f4f6;
-  --color-gray-200: #e5e8eb;
-  --color-gray-300: #d1d6db;
-  --color-gray-400: #b0b8c1;
-  --color-gray-500: #8b95a1;
-  --color-gray-600: #6b7684;
-  --color-gray-700: #4e5968;
-  --color-gray-800: #333d4b;
-  --color-gray-900: #191f28;
-
-  /* Semantic (TDS 정품) */
+  /* Semantic (status only) */
   --color-success: #03b26c;
   --color-warning: #fe9800;
   --color-error: #f04452;
 
-  /* Background Surfaces */
-  --color-bg-primary: #ffffff;
-  --color-bg-secondary: #f9fafb;
-  --color-bg-tertiary: #f2f4f6;
+  /* Shadows */
+  --shadow-card: 0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03);
+  --shadow-card-hover: 0 2px 8px rgba(0,0,0,0.06), 0 8px 24px rgba(0,0,0,0.04);
+  --shadow-modal: 0 8px 32px rgba(0,0,0,0.12);
 
-  /* Typography — Toss Product Sans */
-  --font-sans: "Toss Product Sans", "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "SF Pro KR", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+  /* Typography */
+  --font-sans: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
 }
 
 /* ── Base ── */
 body {
-  background: var(--color-bg-secondary);
-  color: var(--color-gray-900);
+  background: var(--color-paper);
+  color: var(--color-graphite);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

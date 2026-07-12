@@ -1,9 +1,5 @@
 "use client";
 
-// [설계 의도]: 장식적 요소를 모두 배제하고 화면 중앙 집중형 그리드와 정밀한 조형선(Stroke) 처리를 통해,
-// 채점관이 비즈니스 핵심 액션(루틴 설정, 범위 피커, 비동기 알림 리스트)에 피로감 없이 몰입하도록 UI 밀도를 극대화한다.
-// 9to6 외 시간은 초기값 불가로 설정하되 유저 클릭으로 해제 가능하게 하여 유연성을 보장한다.
-
 import { useState, useCallback, useRef, useEffect } from "react";
 import { AppShell, Button } from "@/components/ui";
 import { DAYS, HOURS, CORE_HOURS_START, PEOPLE, type SlotState, isBusinessHour } from "@/lib/data";
@@ -14,11 +10,11 @@ const SCHEDULE_TAGS = ["기타", "외근", "회의", "휴가", "원온원"] as c
 type ScheduleTag = typeof SCHEDULE_TAGS[number];
 
 const TAG_COLORS: Record<ScheduleTag, { active: string; inactive: string }> = {
-  기타: { active: "bg-[#333d4b] text-white", inactive: "bg-[#f2f4f6] text-[#6b7684] hover:bg-[#e5e8eb]" },
-  외근: { active: "bg-[#3182f6] text-white", inactive: "bg-[#f2f4f6] text-[#6b7684] hover:bg-[#e5e8eb]" },
-  회의: { active: "bg-[#03b26c] text-white", inactive: "bg-[#f2f4f6] text-[#6b7684] hover:bg-[#e5e8eb]" },
-  휴가: { active: "bg-[#fe9800] text-white", inactive: "bg-[#f2f4f6] text-[#6b7684] hover:bg-[#e5e8eb]" },
-  원온원: { active: "bg-[#8b5cf6] text-white", inactive: "bg-[#f2f4f6] text-[#6b7684] hover:bg-[#e5e8eb]" },
+  기타: { active: "bg-ink text-white", inactive: "bg-mist text-slate hover:bg-silver" },
+  외근: { active: "bg-ink text-white", inactive: "bg-mist text-slate hover:bg-silver" },
+  회의: { active: "bg-ink text-white", inactive: "bg-mist text-slate hover:bg-silver" },
+  휴가: { active: "bg-ink text-white", inactive: "bg-mist text-slate hover:bg-silver" },
+  원온원: { active: "bg-ink text-white", inactive: "bg-mist text-slate hover:bg-silver" },
 };
 
 // ── 일정 등록 모달 ──
@@ -44,25 +40,25 @@ function AddScheduleModal({
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center backdrop-blur-sm bg-black/40">
-      <div className="bg-white rounded-[16px] p-7 shadow-[0_8px_32px_rgba(0,0,0,0.12)] w-[440px] max-w-[90vw]">
+      <div className="bg-white rounded-[16px] p-7 shadow-modal w-[440px] max-w-[90vw]">
         {submitted ? (
           <div className="flex flex-col items-center py-10">
-            <div className="w-14 h-14 rounded-full bg-[rgba(3,178,108,0.08)] flex items-center justify-center mb-4">
+            <div className="w-14 h-14 rounded-full bg-success/8 flex items-center justify-center mb-4">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
                 <path d="M7 13l3 3 7-7" stroke="#03b26c" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </div>
-            <p className="text-[15px] font-bold text-[#191f28]">일정이 등록되었습니다</p>
-            <p className="text-[12px] text-[#8b95a1] mt-1">시간표에 자동으로 반영됩니다</p>
+            <p className="text-[15px] font-bold text-graphite">일정이 등록되었습니다</p>
+            <p className="text-[12px] text-stone mt-1">시간표에 자동으로 반영됩니다</p>
           </div>
         ) : (
           <>
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h3 className="text-[17px] font-bold text-[#191f28]">일정 등록</h3>
-                <p className="text-[12px] text-[#8b95a1] mt-0.5">새로운 일정을 시간표에 추가합니다</p>
+                <h3 className="text-[17px] font-bold text-graphite">일정 등록</h3>
+                <p className="text-[12px] text-stone mt-0.5">새로운 일정을 시간표에 추가합니다</p>
               </div>
-              <button onClick={onClose} className="text-[#d1d6db] hover:text-[#6b7684] transition-colors duration-150 p-1.5 rounded-[8px] hover:bg-[#f2f4f6]">
+              <button onClick={onClose} className="text-silver hover:text-slate transition-colors duration-150 p-1.5 rounded-full hover:bg-mist">
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                   <path d="M3.5 3.5l7 7M10.5 3.5l-7 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
                 </svg>
@@ -70,25 +66,25 @@ function AddScheduleModal({
             </div>
 
             <div className="mb-5">
-              <label className="block text-[11px] font-bold text-[#6b7684] mb-2">일정 제목</label>
+              <label className="block text-[12px] font-bold text-slate mb-2">일정 제목</label>
               <input
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="일정 제목을 입력하세요"
-                className="w-full h-12 px-4 bg-[#f9fafb] rounded-[10px] border border-[#e5e8eb] text-[13px] text-[#191f28] placeholder:text-[#b0b8c1] focus:outline-none focus:ring-2 focus:ring-[#3182f6]/30 focus:border-[#3182f6]/40 transition-all"
+                className="w-full h-12 px-4 bg-paper rounded-[10px] text-[13px] text-graphite placeholder:text-stone focus:outline-none focus:ring-2 focus:ring-ink/10 focus:bg-white transition-all"
                 autoFocus
               />
             </div>
 
             <div className="mb-5">
-              <label className="block text-[11px] font-bold text-[#6b7684] mb-2">카테고리</label>
+              <label className="block text-[12px] font-bold text-slate mb-2">카테고리</label>
               <div className="flex flex-wrap gap-2">
                 {SCHEDULE_TAGS.map((t) => (
                   <button
                     key={t}
                     onClick={() => setTag(t)}
-                    className={`px-3.5 py-1.5 rounded-[8px] text-[12px] font-bold transition-all duration-200 ${
+                    className={`px-3.5 py-1.5 rounded-full text-[12px] font-bold transition-all duration-200 ${
                       tag === t ? `${TAG_COLORS[t].active} scale-105` : TAG_COLORS[t].inactive
                     }`}
                   >
@@ -100,11 +96,11 @@ function AddScheduleModal({
 
             <div className="grid grid-cols-2 gap-4 mb-7">
               <div>
-                <label className="block text-[11px] font-bold text-[#6b7684] mb-2">요일</label>
+                <label className="block text-[12px] font-bold text-slate mb-2">요일</label>
                 <select
                   value={day}
                   onChange={(e) => setDay(Number(e.target.value))}
-                  className="w-full h-12 px-4 bg-[#f9fafb] rounded-[10px] border border-[#e5e8eb] text-[13px] text-[#191f28] focus:outline-none focus:ring-2 focus:ring-[#3182f6]/30 transition-all appearance-none"
+                  className="w-full h-12 px-4 bg-paper rounded-[10px] text-[13px] text-graphite focus:outline-none focus:ring-2 focus:ring-ink/10 transition-all appearance-none"
                 >
                   {["월요일", "화요일", "수요일", "목요일", "금요일"].map((d, i) => (
                     <option key={i} value={i}>{d}</option>
@@ -112,11 +108,11 @@ function AddScheduleModal({
                 </select>
               </div>
               <div>
-                <label className="block text-[11px] font-bold text-[#6b7684] mb-2">시간</label>
+                <label className="block text-[12px] font-bold text-slate mb-2">시간</label>
                 <select
                   value={hour}
                   onChange={(e) => setHour(Number(e.target.value))}
-                  className="w-full h-12 px-4 bg-[#f9fafb] rounded-[10px] border border-[#e5e8eb] text-[13px] text-[#191f28] focus:outline-none focus:ring-2 focus:ring-[#3182f6]/30 transition-all appearance-none tabular-nums"
+                  className="w-full h-12 px-4 bg-paper rounded-[10px] text-[13px] text-graphite focus:outline-none focus:ring-2 focus:ring-ink/10 transition-all appearance-none tabular-nums"
                 >
                   {HOURS.map((h) => (
                     <option key={h} value={h}>{h.toString().padStart(2, "0")}:00 – {(h + 1).toString().padStart(2, "0")}:00</option>
@@ -128,7 +124,7 @@ function AddScheduleModal({
             <button
               onClick={handleSubmit}
               disabled={!title.trim()}
-              className="w-full h-12 bg-[#3182f6] text-white text-[14px] font-bold rounded-[10px] active:bg-[#2272eb] transition-colors duration-150 disabled:opacity-40 disabled:cursor-not-allowed"
+              className="w-full h-12 bg-ink text-white text-[14px] font-bold rounded-full active:bg-black transition-colors duration-150 disabled:opacity-40 disabled:cursor-not-allowed"
             >
               등록하기
             </button>
@@ -140,21 +136,21 @@ function AddScheduleModal({
 }
 
 const STATE_COLORS: Record<SlotState, string> = {
-  available: "bg-white hover:bg-[#f9fafb]",
-  unavailable: "bg-[#f04452]/10 text-[#f04452]",
-  prefer_not: "bg-[rgba(254,152,0,0.12)] text-[#fe9800]",
+  available: "bg-white hover:bg-paper",
+  unavailable: "bg-error/10 text-error",
+  prefer_not: "bg-warning/12 text-warning",
 };
 
 const STATE_LABELS: Record<SlotState, string> = {
   available: "",
   unavailable: "불가",
-  prefer_not: "비선호",
+  prefer_not: "조정",
 };
 
 type BrushType = "unavailable" | "prefer_not";
 
 // ── 주차 계산 유틸 ──
-const REFERENCE_MONDAY = new Date(2026, 6, 13); // 2026-07-13 (월)
+const REFERENCE_MONDAY = new Date(2026, 6, 13);
 
 function getWeekInfo(weekOffset: number) {
   const monday = new Date(REFERENCE_MONDAY);
@@ -209,7 +205,6 @@ export default function TimetablePage() {
   const person = PEOPLE.find((p) => p.id === viewingPerson)!;
   const weekInfo = getWeekInfo(weekOffset);
 
-  // ── 내부 일정에서 슬롯 태그 로드 ──
   useEffect(() => {
     const schedules = JSON.parse(localStorage.getItem("internal_schedules") || "[]");
     const tags: Record<string, string> = {};
@@ -235,8 +230,7 @@ export default function TimetablePage() {
     const state = timetable[key] || "available";
 
     let newState: SlotState;
-    if (offHour && state === "unavailable") {
-      // 비업무 시간 불가 → 클릭 시 가능으로 해제
+    if (state !== "available") {
       newState = "available";
     } else {
       newState = activeBrush;
@@ -267,26 +261,24 @@ export default function TimetablePage() {
   return (
     <AppShell>
       <main className="flex-1 overflow-y-auto" onPointerUp={handlePointerUp}>
-        {/* ── 헤더 ── */}
-        <header className="sticky top-0 z-20 bg-white/80 backdrop-blur-xl border-b border-[#e5e8eb]/60">
-          <div className="max-w-[960px] mx-auto flex items-center justify-between h-16 px-10">
+        <header className="sticky top-0 z-20 bg-white/80 backdrop-blur-xl shadow-[0_1px_0_rgba(0,0,0,0.04)]">
+          <div className="max-w-[1200px] mx-auto flex items-center justify-between h-16 px-10">
             <div className="flex items-center gap-3">
-              {/* 주차 타이틀 + 좌우 화살표 묶음 */}
               <button
                 onClick={() => setWeekOffset((v) => v - 1)}
-                className="w-8 h-8 flex items-center justify-center rounded-[8px] text-[#6b7684] hover:bg-[#f2f4f6] transition-colors duration-150"
+                className="w-8 h-8 flex items-center justify-center rounded-full text-slate hover:bg-mist transition-colors duration-150"
                 aria-label="이전 주"
               >
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                   <path d="M10 4l-4 4 4 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </button>
-              <h2 className="text-[18px] font-bold text-[#191f28] tabular-nums tracking-tight whitespace-nowrap">
+              <h2 className="text-[18px] font-bold text-graphite tabular-nums tracking-tight whitespace-nowrap">
                 {weekInfo.year}년 {weekInfo.month}월 {weekInfo.weekOfMonth}주차
               </h2>
               <button
                 onClick={() => setWeekOffset((v) => v + 1)}
-                className="w-8 h-8 flex items-center justify-center rounded-[8px] text-[#6b7684] hover:bg-[#f2f4f6] transition-colors duration-150"
+                className="w-8 h-8 flex items-center justify-center rounded-full text-slate hover:bg-mist transition-colors duration-150"
                 aria-label="다음 주"
               >
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -297,7 +289,7 @@ export default function TimetablePage() {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setShowAddModal(true)}
-                className="inline-flex items-center h-9 px-4 bg-white text-[#191f28] text-[13px] font-bold rounded-[8px] border border-[#e5e8eb] hover:bg-[#f9fafb] transition-colors duration-150"
+                className="inline-flex items-center h-9 px-4 bg-mist text-graphite text-[13px] font-bold rounded-full hover:bg-silver transition-colors duration-150"
               >
                 일정 등록
               </button>
@@ -308,91 +300,89 @@ export default function TimetablePage() {
           </div>
         </header>
 
-        <div className="max-w-[960px] mx-auto px-10 py-10">
-          {/* ── 팀 멤버 캘린더 보기 (최상단) ── */}
-          <div className="bg-white rounded-[16px] border border-[#e5e8eb] px-6 py-4 flex items-center gap-4 mb-6">
-            <span className="text-[11px] font-bold text-[#8b95a1]">팀 멤버 캘린더 보기</span>
-            <div className="w-px h-5 bg-[#e5e8eb]" />
+        <div className="max-w-[1200px] mx-auto px-10 py-10">
+          {/* 팀 멤버 캘린더 보기 */}
+          <div className="bg-white rounded-[16px] shadow-card px-6 py-4 flex items-center gap-4 mb-6">
+            <span className="text-[12px] font-bold text-stone">팀 멤버 캘린더 보기</span>
+            <div className="w-px h-5 bg-silver" />
             <div className="flex items-center gap-2.5">
               {PEOPLE.map((p) => (
                 <button
                   key={p.id}
                   onClick={() => setViewingPerson(p.id)}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-[8px] transition-all duration-200 ${
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-full transition-all duration-200 ${
                     viewingPerson === p.id
-                      ? "bg-[#f2f4f6] ring-1 ring-[#3182f6]/30"
-                      : "hover:bg-[#f9fafb] opacity-60 hover:opacity-100"
+                      ? "bg-mist ring-1 ring-ink/10"
+                      : "hover:bg-paper opacity-60 hover:opacity-100"
                   }`}
                   title={`${p.name} (${p.role})`}
                 >
                   <div
-                    className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-white shrink-0"
+                    className="w-7 h-7 rounded-full flex items-center justify-center text-[12px] font-bold text-white shrink-0"
                     style={{ backgroundColor: p.color }}
                   >
                     {p.avatar}
                   </div>
                   {viewingPerson === p.id && (
-                    <span className="text-[11px] font-semibold text-[#191f28]">{p.name}</span>
+                    <span className="text-[12px] font-semibold text-graphite">{p.name}</span>
                   )}
                 </button>
               ))}
             </div>
-            <div className="ml-auto text-[11px] text-[#8b95a1]">{person.role}</div>
+            <div className="ml-auto text-[12px] text-stone">{person.role}</div>
           </div>
 
-          {/* ── 브러시 + 안내 ── */}
-          <div className="bg-white rounded-[16px] border border-[#e5e8eb] px-6 py-5 mb-6">
+          {/* 브러시 + 안내 */}
+          <div className="bg-white rounded-[16px] shadow-card px-6 py-5 mb-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-[13px] text-[#4e5968] leading-relaxed">
-                  회의가 불가능한 시간과 비선호 시간을 드래그로 설정하세요
+                <p className="text-[13px] text-charcoal leading-relaxed">
+                  회의가 불가능한 시간과 조정 시간을 드래그로 설정하세요
                 </p>
-                <p className="text-[11px] text-[#8b95a1] mt-0.5">
+                <p className="text-[12px] text-stone mt-0.5">
                   클릭해서 가능한 시간으로 변경할 수 있습니다
                 </p>
               </div>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setActiveBrush("unavailable")}
-                  className={`flex items-center gap-2 h-9 px-4 rounded-[8px] text-[11px] font-bold transition-all duration-200 ${
+                  className={`flex items-center gap-2 h-9 px-4 rounded-full text-[12px] font-bold transition-all duration-200 ${
                     activeBrush === "unavailable"
-                      ? "bg-[#f04452]/10 text-[#f04452] ring-1 ring-[#f04452]/20"
-                      : "bg-[#f2f4f6] text-[#6b7684] hover:bg-[#e5e8eb]"
+                      ? "bg-error/10 text-error ring-1 ring-error/20"
+                      : "bg-mist text-slate hover:bg-silver"
                   }`}
                 >
-                  <span className="w-3 h-3 rounded-[3px] bg-[#f04452]/20 border-2 border-[#f04452]/50" />
+                  <span className="w-3 h-3 rounded-[3px] bg-error/20 border-2 border-error/50" />
                   불가
                 </button>
                 <button
                   onClick={() => setActiveBrush("prefer_not")}
-                  className={`flex items-center gap-2 h-9 px-4 rounded-[8px] text-[11px] font-bold transition-all duration-200 ${
+                  className={`flex items-center gap-2 h-9 px-4 rounded-full text-[12px] font-bold transition-all duration-200 ${
                     activeBrush === "prefer_not"
-                      ? "bg-[rgba(254,152,0,0.15)] text-[#fe9800] ring-1 ring-[#fe9800]/20"
-                      : "bg-[#f2f4f6] text-[#6b7684] hover:bg-[#e5e8eb]"
+                      ? "bg-warning/15 text-warning ring-1 ring-warning/20"
+                      : "bg-mist text-slate hover:bg-silver"
                   }`}
                 >
-                  <span className="w-3 h-3 rounded-[3px] bg-[rgba(254,152,0,0.2)] border-2 border-[rgba(254,152,0,0.5)]" />
-                  비선호
+                  <span className="w-3 h-3 rounded-[3px] bg-warning/20 border-2 border-warning/50" />
+                  조정
                 </button>
               </div>
             </div>
           </div>
 
-          {/* ── 24시간 시간표 그리드 ── */}
-          <div className="bg-white rounded-[16px] border border-[#e5e8eb] p-6 select-none">
-            {/* 스크롤 영역 (헤더 포함) */}
+          {/* 24시간 시간표 그리드 */}
+          <div className="bg-white rounded-[16px] shadow-card p-6 select-none">
             <div
               ref={gridRef}
               className="overflow-y-auto overscroll-contain"
               style={{ maxHeight: "564px" }}
             >
-              {/* 요일 헤더 */}
               <div className="grid grid-cols-[56px_repeat(5,1fr)] sticky top-0 z-10 bg-white">
                 <div />
                 {DAYS.map((day, i) => (
-                  <div key={i} className="text-center py-2.5 border-b border-l border-[#e5e8eb]">
-                    <span className="text-[12px] font-bold text-[#191f28]">{day}</span>
-                    <span className="block text-[10px] text-[#8b95a1] mt-0.5 tabular-nums">
+                  <div key={i} className="text-center py-2.5 border-b border-l border-silver">
+                    <span className="text-[12px] font-bold text-graphite">{day}</span>
+                    <span className="block text-[12px] text-stone mt-0.5 tabular-nums">
                       {weekInfo.dates[i].month}/{weekInfo.dates[i].date}
                     </span>
                   </div>
@@ -404,13 +394,11 @@ export default function TimetablePage() {
                   const offHour = isOffHour(hour);
                   return (
                     <div key={`row-${hour}`} className="contents">
-                      {/* 시간 라벨 */}
                       <div className="relative h-[44px]">
-                        <span className="absolute -top-[7px] right-3 text-[11px] text-[#8b95a1] tabular-nums tracking-tight font-medium leading-none">
+                        <span className="absolute -top-[7px] right-3 text-[12px] text-stone tabular-nums tracking-tight font-medium leading-none">
                           {formatHour(hour)}
                         </span>
                       </div>
-                      {/* 5일 슬롯 */}
                       {DAYS.map((_, dayIdx) => {
                         const key = `${dayIdx}-${hour}`;
                         const state = timetable[key] || "available";
@@ -418,21 +406,19 @@ export default function TimetablePage() {
                         return (
                           <div
                             key={key}
-                            className={`h-[44px] border-t border-l border-[#e5e8eb] cursor-pointer transition-colors duration-100 flex flex-col items-center justify-center ${
-                              offHour ? "opacity-60 " : ""
-                            }${STATE_COLORS[state]}`}
+                            className={`h-[44px] border-t border-l border-silver cursor-pointer transition-colors duration-100 flex flex-col items-center justify-center ${STATE_COLORS[state]}`}
                             onPointerDown={() => handlePointerDown(key)}
                             onPointerEnter={() => handlePointerEnter(key)}
                           >
                             {state !== "available" && (
-                              <span className={`text-[9px] font-medium ${
-                                state === "unavailable" ? "text-[#f04452]" : "text-[#fe9800]"
+                              <span className={`text-[12px] font-medium ${
+                                state === "unavailable" ? "text-error" : "text-warning"
                               }`}>
                                 {STATE_LABELS[state]}
                               </span>
                             )}
                             {slotTags[key] && state === "unavailable" && (
-                              <span className="text-[8px] font-medium text-[#f04452]/70 mt-px">
+                              <span className="text-[12px] font-medium text-error/70 mt-px">
                                 {slotTags[key]}
                               </span>
                             )}
@@ -448,7 +434,6 @@ export default function TimetablePage() {
         </div>
       </main>
 
-      {/* 일정 등록 모달 */}
       {showAddModal && (
         <AddScheduleModal
           onClose={() => setShowAddModal(false)}

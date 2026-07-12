@@ -8,9 +8,8 @@ export function ReviewerGuidePanel() {
   const { clearAll } = useMeetings();
 
   return (
-    <aside className="w-[280px] shrink-0 h-screen sticky top-0 bg-[#191f28] flex flex-col">
+    <aside className="w-[280px] shrink-0 h-screen sticky top-0 bg-graphite flex flex-col">
       <div className="flex-1 overflow-y-auto p-6">
-        {/* 타이틀 */}
         <div className="mb-7">
           <h4 className="text-[14px] font-bold text-white flex items-center gap-2 mb-3">
             <span className="text-[16px]">📋</span>
@@ -24,26 +23,23 @@ export function ReviewerGuidePanel() {
           </p>
         </div>
 
-        {/* 3단계 시나리오 버튼 */}
         <div className="space-y-3">
-          {/* 1단계 */}
           <button
             onClick={() => router.push("/create")}
             className="w-full text-left px-4 py-4 rounded-2xl bg-white/[0.06] hover:bg-white/[0.1] border border-white/[0.08] transition-colors duration-200 group"
           >
             <div className="flex items-center gap-3 mb-2">
-              <span className="w-6 h-6 rounded-[6px] bg-[#3182f6] text-white text-[11px] font-bold flex items-center justify-center shrink-0">1</span>
-              <span className="text-[15px] font-bold text-white group-hover:text-[#3182f6] transition-colors duration-150">6인 회의 바로 만들기</span>
+              <span className="w-6 h-6 rounded-[6px] bg-ink text-white text-[12px] font-bold flex items-center justify-center shrink-0">1</span>
+              <span className="text-[15px] font-bold text-white group-hover:text-silver transition-colors duration-150">6인 회의 바로 만들기</span>
             </div>
             <p className="text-[15px] text-white/40 ml-9 leading-[1.6]">
               회의 생성 → 참석자 선택 → 매칭률 기반 실시간 추천
             </p>
           </button>
 
-          {/* 2단계 */}
           <div className="w-full text-left px-4 py-4 rounded-2xl bg-white/[0.06] border border-white/[0.08]">
             <div className="flex items-center gap-3 mb-2">
-              <span className="w-6 h-6 rounded-[6px] bg-[#fe9800] text-white text-[11px] font-bold flex items-center justify-center shrink-0">2</span>
+              <span className="w-6 h-6 rounded-[6px] bg-warning text-white text-[12px] font-bold flex items-center justify-center shrink-0">2</span>
               <span className="text-[15px] font-bold text-white">플라이휠 효과 검증</span>
             </div>
             <p className="text-[15px] text-white/40 ml-9 leading-[1.6]">
@@ -51,14 +47,13 @@ export function ReviewerGuidePanel() {
             </p>
           </div>
 
-          {/* 3단계 */}
           <button
             onClick={clearAll}
-            className="w-full text-left px-4 py-4 rounded-2xl bg-white/[0.06] hover:bg-[rgba(240,68,82,0.12)] border border-white/[0.08] hover:border-[rgba(240,68,82,0.2)] transition-colors duration-200 group"
+            className="w-full text-left px-4 py-4 rounded-2xl bg-white/[0.06] hover:bg-error/10 border border-white/[0.08] hover:border-error/20 transition-colors duration-200 group"
           >
             <div className="flex items-center gap-3 mb-2">
-              <span className="w-6 h-6 rounded-[6px] bg-[#f04452] text-white text-[11px] font-bold flex items-center justify-center shrink-0">3</span>
-              <span className="text-[15px] font-bold text-white group-hover:text-[#f04452] transition-colors duration-150">데이터 완전 리셋</span>
+              <span className="w-6 h-6 rounded-[6px] bg-error text-white text-[12px] font-bold flex items-center justify-center shrink-0">3</span>
+              <span className="text-[15px] font-bold text-white group-hover:text-error transition-colors duration-150">데이터 완전 리셋</span>
             </div>
             <p className="text-[15px] text-white/40 ml-9 leading-[1.6]">
               확정 회의 전체 삭제 · 초기 상태로 복원
@@ -66,9 +61,8 @@ export function ReviewerGuidePanel() {
           </button>
         </div>
 
-        {/* 구조 다이어그램 */}
         <div className="mt-8 px-4 py-5 rounded-2xl bg-white/[0.04] border border-white/[0.06]">
-          <p className="text-[10px] font-bold text-white/30 uppercase tracking-[0.1em] mb-4">핵심 루프</p>
+          <p className="text-[12px] font-bold text-white/30 uppercase tracking-[0.1em] mb-4">핵심 루프</p>
           <div className="space-y-3">
             {[
               { step: "루틴 세팅", desc: "불가/비선호 시간 등록" },
@@ -78,12 +72,12 @@ export function ReviewerGuidePanel() {
             ].map((item, i) => (
               <div key={i} className="flex items-start gap-3">
                 <div className="flex flex-col items-center">
-                  <div className="w-5 h-5 rounded-full bg-white/10 flex items-center justify-center text-[9px] font-bold text-white/60 tabular-nums shrink-0">{i + 1}</div>
+                  <div className="w-5 h-5 rounded-full bg-white/10 flex items-center justify-center text-[12px] font-bold text-white/60 tabular-nums shrink-0">{i + 1}</div>
                   {i < 3 && <div className="w-px h-3 bg-white/10 mt-1" />}
                 </div>
                 <div className="pt-0.5">
-                  <span className="text-[11px] font-semibold text-white/70 block">{item.step}</span>
-                  <span className="text-[10px] text-white/30">{item.desc}</span>
+                  <span className="text-[12px] font-semibold text-white/70 block">{item.step}</span>
+                  <span className="text-[12px] text-white/30">{item.desc}</span>
                 </div>
               </div>
             ))}
@@ -91,9 +85,8 @@ export function ReviewerGuidePanel() {
         </div>
       </div>
 
-      {/* 하단 */}
       <div className="px-6 py-4 border-t border-white/[0.06]">
-        <p className="text-[10px] text-white/25 leading-relaxed text-center">
+        <p className="text-[12px] text-white/25 leading-relaxed text-center">
           Corecalendar 프로토타입 · 검토용
         </p>
       </div>

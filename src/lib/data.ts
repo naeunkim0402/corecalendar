@@ -54,7 +54,7 @@ export const PEOPLE: Person[] = [
     syncStatus: "active_internal",
     tags: [
       { text: "점심 직후 기피", type: "warning" },
-      { text: "13-14시 비선호 고정", type: "warning" },
+      { text: "13-14시 조정 고정", type: "warning" },
       { text: "필수 참석", type: "neutral" },
     ],
   },
@@ -92,12 +92,11 @@ export const PEOPLE: Person[] = [
     ],
   },
   {
-    id: "f", name: "한소영", role: "PM · 주최자", attendance: "required",
-    avatar: "소", color: "#007AFF",
-    description: "주최자 시점. 본인도 참석.",
+    id: "f", name: "김나은", role: "프로덕트 디자이너", attendance: "required",
+    avatar: "나", color: "#007AFF",
+    description: "본인도 참석.",
     syncStatus: "active_internal",
     tags: [
-      { text: "주최자", type: "neutral" },
       { text: "필수 참석", type: "neutral" },
     ],
   },
@@ -182,7 +181,7 @@ export function getPersonTimetable(personId: string): Record<string, SlotState> 
       table["4-9"] = "unavailable";
       table["4-10"] = "unavailable";
       break;
-    case "f": // 한소영(주최자)
+    case "f": // 김나은
       table["0-9"] = "unavailable";
       table["0-10"] = "unavailable";
       table["0-14"] = "unavailable";

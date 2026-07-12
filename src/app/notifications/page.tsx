@@ -20,7 +20,7 @@ function getTodayInfo() {
 }
 
 export default function NotificationsPage() {
-  const { meetings, respondToMeeting, loaded } = useMeetings();
+  const { meetings, approveAllForMeeting, rejectMeeting, loaded } = useMeetings();
   const [demoResponded, setDemoResponded] = useState<"accepted" | "rejected" | null>(null);
   const today = getTodayInfo();
 
@@ -99,28 +99,20 @@ export default function NotificationsPage() {
                           </span>
                         </div>
 
-                        {/* 승인/거절 버튼 */}
+                        {/* 승인/거절 버튼 — 전원 일괄 처리 */}
                         <div className="flex items-center gap-2 shrink-0">
-                          {m.attendees.filter((a) => a.id !== "f").map((a) => {
-                            const approval = m.approvals[a.id];
-                            if (approval !== "pending") return null;
-                            return (
-                              <div key={a.id} className="flex items-center gap-1.5">
-                                <button
-                                  onClick={() => respondToMeeting(m.id, a.id, "accepted")}
-                                  className="h-8 px-4 bg-[#3182f6] text-white text-[12px] font-bold rounded-[8px] active:bg-[#2272eb] transition-colors duration-150"
-                                >
-                                  승인
-                                </button>
-                                <button
-                                  onClick={() => respondToMeeting(m.id, a.id, "rejected")}
-                                  className="h-8 px-4 bg-[#f2f4f6] text-[#6b7684] text-[12px] font-bold rounded-[8px] hover:bg-[#e5e8eb] transition-colors duration-150"
-                                >
-                                  거절
-                                </button>
-                              </div>
-                            );
-                          }).filter(Boolean).slice(0, 1)}
+                          <button
+                            onClick={() => approveAllForMeeting(m.id)}
+                            className="h-8 px-4 bg-[#3182f6] text-white text-[12px] font-bold rounded-[8px] active:bg-[#2272eb] transition-colors duration-150"
+                          >
+                            승인
+                          </button>
+                          <button
+                            onClick={() => rejectMeeting(m.id)}
+                            className="h-8 px-4 bg-[#f2f4f6] text-[#6b7684] text-[12px] font-bold rounded-[8px] hover:bg-[#e5e8eb] transition-colors duration-150"
+                          >
+                            거절
+                          </button>
                         </div>
                       </div>
                     </div>

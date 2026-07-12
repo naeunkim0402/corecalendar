@@ -124,6 +124,32 @@ export function useMeetings() {
     });
   }, []);
 
+  const approveAllForMeeting = useCallback((meetingId: string) => {
+    setMeetings((prev) => {
+      const next = prev.map((m) => {
+        if (m.id !== meetingId || m.status !== "pending") return m;
+        const updated = { ...m, approvals: { ...m.approvals } };
+        updated.attendees.forEach((a) => { updated.approvals[a.id] = "accepted"; });
+        updated.status = "approved";
+        triggerFlywheel(updated);
+        return updated;
+      });
+      save("meetings", next);
+      return next;
+    });
+  }, []);
+
+  const rejectMeeting = useCallback((meetingId: string) => {
+    setMeetings((prev) => {
+      const next = prev.map((m) => {
+        if (m.id !== meetingId || m.status !== "pending") return m;
+        return { ...m, status: "rejected" as MeetingStatus };
+      });
+      save("meetings", next);
+      return next;
+    });
+  }, []);
+
   const deleteMeeting = useCallback((id: string) => {
     setMeetings((prev) => {
       const next = prev.filter((m) => m.id !== id);
@@ -137,7 +163,7 @@ export function useMeetings() {
     save("meetings", []);
   }, []);
 
-  return { meetings, addMeeting, respondToMeeting, deleteMeeting, clearAll, loaded };
+  return { meetings, addMeeting, respondToMeeting, approveAllForMeeting, rejectMeeting, deleteMeeting, clearAll, loaded };
 }
 
 // ── 추천 로직 (실시간 계산) ──

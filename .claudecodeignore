@@ -1,0 +1,48 @@
+# 1. 의존성 및 외부 라이브러리 폴더 (파일 수가 많아 토큰을 가장 많이 낭비함)
+node_modules/
+bower_components/
+.pnpm-store/
+
+# 2. 빌드 결과물 및 컴파일된 파일 (AI가 읽을 필요가 없는 최종 아웃풋)
+dist/
+build/
+out/
+.next/
+.vuepress/dist
+.nuxt/
+bin/
+obj/
+
+# 3. 개발 도구 및 캐시 폴더
+.pages/
+.turbo/
+.cache/
+.npm/
+.eslintcache
+.parcel-cache
+
+# 4. 환경 변수 파일 (보안 및 토큰 절약)
+.env
+.env.local
+.env.*.local
+
+# 5. 미디어 및 자산 파일 (텍스트가 아닌 대형 파일)
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.svg
+*.ico
+*.mp4
+*.mp3
+assets/raw/
+
+# 6. 로그 및 임시 파일
+*.log
+logs/
+*.tmp
+*.temp
+
+# 7. OS 및 시스템 파일
+.DS_Store
+Thumbs.db

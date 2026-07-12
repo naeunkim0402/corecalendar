@@ -203,10 +203,23 @@ export default function TimetablePage() {
   const [saved, setSaved] = useState(false);
   const [weekOffset, setWeekOffset] = useState(0);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [slotTags, setSlotTags] = useState<Record<string, string>>({});
   const gridRef = useRef<HTMLDivElement>(null);
 
   const person = PEOPLE.find((p) => p.id === viewingPerson)!;
   const weekInfo = getWeekInfo(weekOffset);
+
+  // ── 내부 일정에서 슬롯 태그 로드 ──
+  useEffect(() => {
+    const schedules = JSON.parse(localStorage.getItem("internal_schedules") || "[]");
+    const tags: Record<string, string> = {};
+    for (const s of schedules) {
+      if (s.personId === viewingPerson) {
+        tags[`${s.day}-${s.hour}`] = s.tag;
+      }
+    }
+    setSlotTags(tags);
+  }, [viewingPerson, loaded]);
 
   useEffect(() => {
     if (loaded && gridRef.current) {
@@ -334,6 +347,9 @@ export default function TimetablePage() {
                 <p className="text-[13px] text-[#4e5968] leading-relaxed">
                   회의가 불가능한 시간과 비선호 시간을 드래그로 설정하세요
                 </p>
+                <p className="text-[11px] text-[#8b95a1] mt-0.5">
+                  클릭해서 가능한 시간으로 변경할 수 있습니다
+                </p>
               </div>
               <div className="flex items-center gap-2">
                 <button
@@ -389,7 +405,7 @@ export default function TimetablePage() {
                   return (
                     <div key={`row-${hour}`} className="contents">
                       {/* 시간 라벨 */}
-                      <div className={`relative h-[44px] ${offHour ? "opacity-30" : ""}`}>
+                      <div className="relative h-[44px]">
                         <span className="absolute -top-[7px] right-3 text-[11px] text-[#8b95a1] tabular-nums tracking-tight font-medium leading-none">
                           {formatHour(hour)}
                         </span>
@@ -402,7 +418,7 @@ export default function TimetablePage() {
                         return (
                           <div
                             key={key}
-                            className={`h-[44px] border-t border-l border-[#e5e8eb] cursor-pointer transition-colors duration-100 flex items-center justify-center ${
+                            className={`h-[44px] border-t border-l border-[#e5e8eb] cursor-pointer transition-colors duration-100 flex flex-col items-center justify-center ${
                               offHour ? "opacity-60 " : ""
                             }${STATE_COLORS[state]}`}
                             onPointerDown={() => handlePointerDown(key)}
@@ -413,6 +429,11 @@ export default function TimetablePage() {
                                 state === "unavailable" ? "text-[#f04452]" : "text-[#fe9800]"
                               }`}>
                                 {STATE_LABELS[state]}
+                              </span>
+                            )}
+                            {slotTags[key] && state === "unavailable" && (
+                              <span className="text-[8px] font-medium text-[#f04452]/70 mt-px">
+                                {slotTags[key]}
                               </span>
                             )}
                           </div>
@@ -447,6 +468,8 @@ export default function TimetablePage() {
               createdAt: new Date().toISOString(),
             });
             localStorage.setItem("internal_schedules", JSON.stringify(schedules));
+
+            setSlotTags((prev) => ({ ...prev, [key]: tag }));
           }}
         />
       )}

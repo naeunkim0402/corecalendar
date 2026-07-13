@@ -3,7 +3,6 @@
 import { type ReactNode, useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useGeolocation } from "@/lib/useGeolocation";
 
 interface NavItemProps {
   icon: ReactNode;
@@ -39,7 +38,6 @@ interface SidebarProps {
 export function Sidebar({ activeNav }: SidebarProps) {
   const pathname = usePathname();
   const [pendingCount, setPendingCount] = useState(0);
-  const geo = useGeolocation();
 
   useEffect(() => {
     const check = () => {
@@ -127,22 +125,6 @@ export function Sidebar({ activeNav }: SidebarProps) {
           />
         ))}
       </nav>
-
-      {/* 위치 정보 */}
-      <div className="px-4 py-3 border-t border-mist">
-        <div className="flex items-center gap-2 text-[11px] text-slate">
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="shrink-0 text-slate/60">
-            <path d="M6 1a3.5 3.5 0 0 1 3.5 3.5C9.5 7.5 6 11 6 11S2.5 7.5 2.5 4.5A3.5 3.5 0 0 1 6 1Z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"/>
-            <circle cx="6" cy="4.5" r="1" fill="currentColor"/>
-          </svg>
-          <span className="truncate">
-            {geo.city}{geo.country !== "KR" ? `, ${geo.country}` : ""} · {geo.timezone.split("/")[1]?.replace(/_/g, " ") ?? geo.timezone}
-          </span>
-        </div>
-        <div className="flex items-center gap-1 text-[10px] text-slate/50 mt-0.5 pl-[18px]">
-          <span>{geo.latitude}° N, {geo.longitude}° E</span>
-        </div>
-      </div>
 
       <div className="px-4 py-3 border-t border-mist">
         <div className="flex items-center gap-3">

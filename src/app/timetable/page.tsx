@@ -226,7 +226,7 @@ const STATE_COLORS: Record<SlotState, string> = {
 const STATE_LABELS: Record<SlotState, string> = {
   available: "",
   unavailable: "불가",
-  prefer_not: "조정",
+  prefer_not: "비선호",
 };
 
 
@@ -512,7 +512,7 @@ function TimetableContent() {
                         return (
                           <div
                             key={key}
-                            className={`relative h-[44px] rounded-[6px] transition-colors duration-100 ${STATE_COLORS[state]} ${
+                            className={`relative h-[44px] rounded-[6px] transition-colors duration-100 flex items-center justify-center ${STATE_COLORS[state]} ${
                               isOpposite ? "opacity-30 cursor-not-allowed" : "cursor-pointer"
                             }`}
                             onPointerDown={() => isEditable && handlePointerDown(key)}

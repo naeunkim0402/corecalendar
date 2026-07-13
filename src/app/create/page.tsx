@@ -97,10 +97,15 @@ function MiniCalendarPicker({
   const daysInMonth = getDaysInMonth(current.year, current.month);
   const firstDay = getFirstDayOfWeek(current.year, current.month);
 
+  const todayStr = new Date().toISOString().slice(0, 10);
+
   const toDateStr = (day: number) =>
     `${current.year}-${String(current.month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 
+  const isPast = (day: number) => toDateStr(day) < todayStr;
+
   const handleDayClick = (day: number) => {
+    if (isPast(day)) return;
     const dateStr = toDateStr(day);
     if (!tempStart || (tempStart && tempEnd)) {
       setTempStart(dateStr);
@@ -161,7 +166,8 @@ function MiniCalendarPicker({
           <div key={`empty-${i}`} className="h-9" />
         ))}
         {Array.from({ length: daysInMonth }, (_, i) => i + 1).map((day) => {
-          const inRange = isInRange(day);
+          const past = isPast(day);
+          const inRange = !past && isInRange(day);
           const start = isStart(day);
           const end = isEnd(day);
           const selected = start || end;
@@ -169,11 +175,10 @@ function MiniCalendarPicker({
 
           // Connected bar: start gets right half bg, end gets left half bg, middle gets full bg
           let rangeBg = "";
-          if (hasRange) {
+          if (!past && hasRange) {
             if (start && !end) rangeBg = "bg-gradient-to-r from-transparent to-ink/10";
             else if (end && !start) rangeBg = "bg-gradient-to-l from-transparent to-ink/10";
             else if (inRange) rangeBg = "bg-ink/10";
-            // When start === end, no range bg
             if (start && end) rangeBg = "";
           }
 
@@ -181,8 +186,11 @@ function MiniCalendarPicker({
             <div key={day} className={`relative h-9 flex items-center justify-center ${rangeBg}`}>
               <button
                 onClick={() => handleDayClick(day)}
+                disabled={past}
                 className={`relative z-10 w-9 h-9 text-[12px] font-semibold tabular-nums transition-colors duration-100 rounded-full ${
-                  selected
+                  past
+                    ? "text-stone/35 cursor-not-allowed"
+                    : selected
                     ? "bg-ink text-white"
                     : "text-graphite hover:bg-mist"
                 }`}

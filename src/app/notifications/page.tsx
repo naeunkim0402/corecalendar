@@ -55,6 +55,7 @@ export default function NotificationsPage() {
               <div className="space-y-3">
                 {pendingMeetings.map((m) => {
                   const organizerPerson = PEOPLE.find((p) => p.id === "f");
+                  const myAttendance = m.attendees.find((a) => a.id === "f")?.attendance;
 
                   return (
                     <div key={m.id} className="bg-white rounded-[16px] shadow-card px-7 py-5">
@@ -65,6 +66,16 @@ export default function NotificationsPage() {
                         </span>
 
                         <span className="text-[14px] font-bold text-graphite shrink-0">{m.title}</span>
+
+                        {myAttendance && (
+                          <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[12px] font-bold shrink-0 ${
+                            myAttendance === "required"
+                              ? "bg-ink/8 text-charcoal"
+                              : "bg-mist text-slate"
+                          }`}>
+                            {myAttendance === "required" ? "필수 참석" : "선택 참석"}
+                          </span>
+                        )}
 
                         <span className="text-[13px] text-slate tabular-nums shrink-0">
                           {today.month}/{today.date} {today.dayLabel}요일
@@ -117,6 +128,10 @@ export default function NotificationsPage() {
 
                       <span className="text-[14px] font-bold text-graphite shrink-0">스프린트 킥오프</span>
 
+                      <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[12px] font-bold shrink-0 bg-ink/8 text-charcoal">
+                        필수 참석
+                      </span>
+
                       <span className="text-[13px] text-slate tabular-nums shrink-0">
                         {today.month}/{today.date} {today.dayLabel}요일
                       </span>
@@ -129,7 +144,7 @@ export default function NotificationsPage() {
                           나
                         </div>
                         <span className="text-[12px] text-slate">
-                          김나은 · 프로덕트 디자이너
+                          김나은 · 디자이너
                         </span>
                       </div>
 

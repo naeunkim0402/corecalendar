@@ -133,7 +133,7 @@ export function Sidebar({ activeNav }: SidebarProps) {
           </div>
           <div>
             <span className="text-[13px] font-semibold text-graphite block">김나은</span>
-            <span className="text-[12px] text-slate">프로덕트 디자이너</span>
+            <span className="text-[12px] text-slate">디자이너</span>
           </div>
         </div>
       </div>

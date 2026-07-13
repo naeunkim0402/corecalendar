@@ -92,7 +92,7 @@ export const PEOPLE: Person[] = [
     ],
   },
   {
-    id: "f", name: "김나은", role: "프로덕트 디자이너", attendance: "required",
+    id: "f", name: "김나은", role: "디자이너", attendance: "required",
     avatar: "나", color: "#007AFF",
     description: "본인도 참석.",
     syncStatus: "active_internal",

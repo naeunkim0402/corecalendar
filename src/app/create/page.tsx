@@ -21,7 +21,7 @@ function AttendeeAvatar({ a, compact = false }: { a: AttendeeSlotState; compact?
   const tooltip =
     a.state === "absent" ? (a.tag ? `불참: ${a.tag}` : "불참") :
     a.state === "prefer_not" ? "비선호" :
-    !a.verified ? "일정 미확인" : "참석 가능";
+    "참석 가능";
 
   const size = compact ? "w-6 h-6 text-[10px]" : "w-7 h-7 text-[12px]";
 

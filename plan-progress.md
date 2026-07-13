@@ -56,6 +56,11 @@
 
 ### 1. 대시보드 (`/`)
 - 웰컴 모달: "토스 프로덕트 디자이너 챌린지 2026" (sessionStorage, 세션당 1회)
+- **오늘 스케줄 섹션**: 예정 회의 섹션 위에 위치
+  - 당일(day=0) 확정 회의 + `internal_schedules`(personId "f") 병합
+  - 연속된 같은 groupId 블록은 하나의 타임라인 항목으로 그루핑
+  - 시작 시각 오름차순 정렬, 시간·제목·타입 뱃지 표시
+  - 빈 상태: "오늘은 비어 있어요"
 - 예정 회의 섹션: 거절된 회의 미표시, `approved` 상태만 노출
 - [일정 등록] 버튼 → `/timetable?add=1` (모달 자동 오픈)
 - 온보딩 모달: 완료 시 `/timetable`로 라우팅
@@ -71,23 +76,51 @@
   - `editMode: null | "unavailable" | "prefer_not"`
   - 반대 상태 셀: `opacity-30 cursor-not-allowed` (비활성)
   - 드래그 페인트 지원
-- **셀 상태**: `available`(기본) / `unavailable`(빨강) / `prefer_not`(주황, 라벨: 비선호)
-- **00:00 행**: 렌더는 유지하되 라벨 미노출 (`{hour > 0 && <label>}`)
-- **시간 라벨**: `absolute -top-[7px]` (행 경계선 기준 정렬)
-- **요일 헤더**: 세로 배치 (요일 위, 날짜 아래), 그리드 상단 여백 없음
-- **일정 등록 모달**: 시작~끝 시간 범위 선택 (CustomSelect)
+  - 일정 슬롯이 있는 셀은 페인트 차단 (`if (slotData[key]) return`)
+
+#### 그리드 스타일 — 여백 분리형 듀오 컬러 블록 UI
+- 외부 컨테이너: 흰색 카드 (`bg-white rounded-2xl shadow-sm`)
+- 셀 간격: `gap-y-[3px] gap-x-[4px]`, 각 셀 `rounded-[6px]`
+- 셀 상태 색상:
+  - `available`: `bg-[#f4f5f7]` (기본 회색)
+  - `unavailable`: `bg-[#fff0f1] text-[#f04452]` 라벨 "불가" (중앙 정렬)
+  - `prefer_not`: `bg-[#fff5eb] text-[#ff9800]` 라벨 "비선호" (중앙 정렬)
+- 시간 라벨: `absolute -top-[7px]` (행 경계선 기준 정렬)
+- 00:00 행: 렌더 유지, 라벨 미노출 (`{hour > 0 && <label>}`)
+
+#### 블록 병합 렌더링
+- `slotData: Record<string, { tag, groupId, title }>` — 셀별 일정 메타
+- `computeMergedBlocksForDay()`: 연속 동일 상태/groupId 블록 병합
+- 절대 좌표 오버레이: `top = startIdx × 47`, `height = span × 44 + (span-1) × 3`
+- **일정 블록**: 흰색 카드 + 좌측 색 바 (태그별 색상)
+  - `기타 #94a3b8 / 외근 #f59e0b / 회의 #3182f6 / 휴가 #34c759 / 원온원 #af52de`
+- **불가/비선호 병합 블록**: 상태 색상 그대로 병합 표시
+- **삭제 팝오버**: 블록 클릭 시 "일정 삭제" / "취소" 팝오버 (click-away 오버레이)
+- `groupId = sch-${Date.now()}` — 등록 시 자동 생성
+
+#### 외부 캘린더 연동 패널
+- 위치: 컨텐츠 영역 우측 (`right-0`), 숨김 시 `translate-x-[600px]`
+- 동기화 완료 버튼 클릭 → 패널 닫힘 (`showSyncPanel = false`)
+
 - **팀원 캘린더 보기**: 편집 패널·버튼 비활성화 (읽기 전용)
 - `useSearchParams` → Suspense 경계 처리 (정적 프리렌더링 빌드 오류 해결)
 
 ### 3. 회의 생성 (`/create`)
-- 참석자 선택 → 최적 시간 추천 (matchScore 알고리즘)
-- 제목: "선택한 기간에서 최적의 시간 N개를 찾았어요" (bold 없음)
+- 참석자 선택 → 실시간 최적 슬롯 계산
+- **추천 슬롯**: 가능한 전체 슬롯 중 시간 빠른 순 상위 3개만 카드로 표시
+  - 카드 3개 가로 배치 (`grid grid-cols-3 gap-4`)
+  - 비선호 시 아바타 주황 stroke 없음
+- **히트맵**: 유효 슬롯 전체를 파란색으로 표시 ("더 많은 시간대 보기")
+  - 상위 3개는 ring으로 강조
+  - 비선호 주황 점 없음
+  - 범례에 비선호 항목 없음
 - 소요시간: CustomSelect 드롭다운
 - 날짜 범위: `~` 구분자
 
 ### 4. 요청 회의건 (`/notifications`)
 - 구 "알림" → "요청 회의건"으로 리네임
 - 승인/거절 처리 → 처리 완료 섹션 이동
+- 필수/선택 참석 타입 태그 표시
 - 중복 생성 버그 수정 (custom event 제거, popstate/focus 리스너로 대체)
 
 ---
@@ -99,12 +132,12 @@
 - `useMeetings()`: 회의 목록 + 비동기 승인 흐름
   - `addMeeting` / `respondToMeeting` / `approveAllForMeeting` / `rejectMeeting` / `deleteMeeting`
   - `triggerFlywheel`: 전원 수락 시 참석자 시간표 자동 `unavailable` 처리
-- `computeRecommendations`: 실시간 최적 슬롯 계산
-  - 점수 = 참석자(60) + 비선호 패널티(30) + 필수참석(10)
-  - 정렬: matchScore 내림차순 → 비선호 최소 → 참석 최대 → 이른 시간
+- `computeRecommendations`: 실시간 최적 슬롯 계산 (내부 알고리즘)
+  - 회의 생성 페이지에서는 시간 빠른 순 정렬로 오버라이드
 
 ### data.ts
-- `PEOPLE`: 팀원 6명 (id, name, role, avatar)
+- `PEOPLE`: 팀원 6명 (id, name, role, avatar, color, description, tags)
+  - `syncStatus` 필드 완전 제거
 - `HOURS`: 0~23 (업무시간 = 9~18)
 - `getPersonTimetable`: 인물별 시드 시간표 생성
 
@@ -114,7 +147,7 @@
 
 | 컴포넌트 | 위치 | 설명 |
 |---------|------|------|
-| Sidebar | `src/components/ui/Sidebar.tsx` | 좌측 네비게이션, "요청 회의건" |
+| Sidebar | `src/components/ui/Sidebar.tsx` | 좌측 네비게이션, "요청 회의건" 뱃지 |
 | ReviewerGuidePanel | `src/components/ui/ReviewerGuidePanel.tsx` | 우측 토스 담당자 데모 가이드 |
 | CustomSelect | timetable/create 페이지 내 인라인 | 커스텀 드롭다운 (팀원/시간/소요시간) |
 
@@ -140,11 +173,11 @@
 
 | 항목 | 내용 |
 |------|------|
-| 저장소 | GitHub (자동 연동) |
+| 저장소 | GitHub — naeunkim0402/corecalendar |
 | 배포 플랫폼 | Vercel |
 | 프로덕션 URL | https://schedule-app-livid-one.vercel.app |
 | Analytics | Vercel Analytics (활성화 완료) |
-| 마지막 커밋 | `fix: onboarding navigates to timetable, darker action buttons` |
+| 마지막 커밋 | `revert: remove Vercel Geolocation feature` |
 
 ---
 
@@ -153,3 +186,16 @@
 1. **빌드 오류** (`useSearchParams`): Suspense 경계 추가로 해결
 2. **처리 완료 중복 생성**: `save()` 내 custom event dispatch 제거, popstate/focus로 대체
 3. **01:00 라벨 잘림**: 00:00 행 유지 + 라벨만 조건부 미노출로 해결
+4. **동기화 패널 미닫힘**: `showSyncPanel = false` 트리거 누락 수정
+5. **동기화 패널 위치 겹침**: `right-0 + translate-x-[600px]`로 ReviewerGuidePanel과 분리
+6. **`a.verified` TypeScript 오류**: 제거된 필드 참조 3곳 일괄 삭제
+
+---
+
+## 다음 단계 (미완료)
+
+- [ ] 반응형/모바일 대응 (현재 데스크톱 사이드바 레이아웃)
+- [ ] 확정 회의 상세 보기 / 취소 시 시간표 복원
+- [ ] 시간표 페이지 저장 완료 토스트 피드백
+- [ ] 다크 모드
+- [ ] 접근성 개선 (키보드 네비게이션, ARIA)

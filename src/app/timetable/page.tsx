@@ -542,7 +542,7 @@ function TimetableContent() {
       </main>
 
       {/* ── 2. 외부 캘린더 연동 Diff-View 패널 ── */}
-      <div className={`fixed top-0 right-0 h-full w-[300px] bg-white border-l border-silver z-30 flex flex-col shadow-modal transition-transform duration-300 ${showSyncPanel ? "translate-x-0" : "translate-x-full pointer-events-none"}`}>
+      <div className={`fixed top-0 right-[300px] h-full w-[300px] bg-white border-l border-r border-silver z-30 flex flex-col shadow-modal transition-transform duration-300 ${showSyncPanel ? "translate-x-0" : "translate-x-[600px] pointer-events-none"}`}>
         <div className="px-5 py-4 border-b border-silver flex items-start justify-between">
           <div>
             <h3 className="text-[14px] font-bold text-graphite">외부 캘린더 연동 검수</h3>

@@ -359,13 +359,13 @@ export default function CreateMeetingPage() {
     const startDay = Math.round((new Date(dateStart).getTime() - WEEK_START_MS) / 86400000);
     const endDay   = Math.round((new Date(dateEnd).getTime()   - WEEK_START_MS) / 86400000);
 
-    return all.filter((slot) => slot.day >= startDay && slot.day <= endDay);
+    return all.filter((slot) => slot.day >= startDay && slot.day <= endDay).slice(0, 3);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedPeople, dateStart, dateEnd]);
 
   const safeIdx = Math.min(selectedSlotIdx, Math.max(0, recommendations.length - 1));
   const featuredSlot = recommendations[safeIdx];
-  const otherSlots = recommendations.filter((_, i) => i !== safeIdx).slice(0, 5);
+  const otherSlots = recommendations.filter((_, i) => i !== safeIdx);
 
   const togglePerson = (id: string) => {
     setSelectedPeople((prev) => {

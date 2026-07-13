@@ -294,6 +294,7 @@ function TimetableContent() {
   const [showSyncPanel, setShowSyncPanel] = useState(false);
   const [syncChoice, setSyncChoice] = useState<"keep" | "overwrite" | null>(null);
   const [syncDone, setSyncDone] = useState(false);
+  const [syncLoading, setSyncLoading] = useState(false);
   const gridRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -498,10 +499,18 @@ function TimetableContent() {
                 비선호 시간 선택하기
               </button>
               <button
-                onClick={() => setShowSyncPanel((v) => !v)}
-                className="h-10 px-5 bg-silver text-graphite text-[13px] font-bold rounded-[8px] hover:bg-stone/30 transition-colors duration-150 ml-auto"
+                onClick={() => {
+                  if (showSyncPanel || syncLoading) return;
+                  setSyncLoading(true);
+                  setTimeout(() => { setSyncLoading(false); setShowSyncPanel(true); }, 1400);
+                }}
+                disabled={syncLoading}
+                className="h-10 px-5 bg-silver text-graphite text-[13px] font-bold rounded-[8px] hover:bg-stone/30 transition-colors duration-150 ml-auto flex items-center gap-2 disabled:opacity-60"
               >
-                외부 캘린더 연동하기
+                {syncLoading && (
+                  <span className="w-3.5 h-3.5 border-2 border-graphite/30 border-t-graphite rounded-full animate-spin shrink-0" />
+                )}
+                {syncLoading ? "연동 중..." : "외부 캘린더 연동하기"}
               </button>
             </div>
           )}

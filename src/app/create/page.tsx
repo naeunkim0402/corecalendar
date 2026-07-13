@@ -31,7 +31,6 @@ function AttendeeAvatar({ a, compact = false }: { a: AttendeeSlotState; compact?
         className={`relative ${size} rounded-full flex items-center justify-center font-bold text-white ${a.state === "absent" ? "opacity-40" : ""}`}
         style={{
           backgroundColor: a.color,
-          ...(a.state === "prefer_not" ? { outline: "2px solid #fe9800", outlineOffset: "1px" } : {}),
         }}
         title={tooltip}
       >
@@ -625,9 +624,6 @@ export default function CreateMeetingPage() {
                                       title={`${slot.totalAttendees}/${slot.maxAttendees}명 가능${slot.preferNotCount > 0 ? ` · 비선호 ${slot.preferNotCount}명` : ""}`}
                                       className={`relative h-7 rounded-[4px] ${bg} ${isTop3 ? "ring-2 ring-[#3182F6] ring-offset-1" : ""}`}
                                     >
-                                      {slot.preferNotCount > 0 && (
-                                        <span className="absolute top-0.5 right-0.5 w-1.5 h-1.5 rounded-full bg-warning" />
-                                      )}
                                     </div>
                                   );
                                 })}
@@ -638,7 +634,6 @@ export default function CreateMeetingPage() {
                             <div className="flex items-center gap-1.5 text-[11px] text-slate"><span className="w-3 h-3 rounded-sm bg-[#3182F6]" />전원 참석</div>
                             <div className="flex items-center gap-1.5 text-[11px] text-slate"><span className="w-3 h-3 rounded-sm bg-[#3182F6]/55" />일부 참석</div>
                             <div className="flex items-center gap-1.5 text-[11px] text-slate"><span className="w-3 h-3 rounded-sm bg-mist border border-silver" />불가</div>
-                            <div className="flex items-center gap-1.5 text-[11px] text-slate"><span className="w-1.5 h-1.5 rounded-full bg-warning" />비선호</div>
                           </div>
                         </div>
                       )}

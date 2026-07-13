@@ -448,18 +448,26 @@ function TimetableContent() {
             <div className="flex items-center gap-2 mb-6">
               <button
                 onClick={() => setEditMode("unavailable")}
-                className="h-10 px-5 bg-silver text-graphite text-[13px] font-bold rounded-[8px] hover:bg-stone/30 transition-colors duration-150"
+                className="h-10 px-5 text-[13px] font-bold rounded-[8px] transition-colors duration-150"
+                style={{
+                  backgroundColor: "lab(56.1306% 66.3818 33.2557 / .1)",
+                  color: "#f04452",
+                }}
               >
                 불가능한 시간 선택하기
               </button>
               <button
                 onClick={() => setEditMode("prefer_not")}
-                className="h-10 px-5 bg-silver text-graphite text-[13px] font-bold rounded-[8px] hover:bg-stone/30 transition-colors duration-150"
+                className="h-10 px-5 text-[13px] font-bold rounded-[8px] transition-colors duration-150"
+                style={{
+                  backgroundColor: "lab(72.6018% 33.5338 77.3213 / .12)",
+                  color: "#fe9800",
+                }}
               >
                 비선호 시간 선택하기
               </button>
               <button
-                className="h-10 px-5 bg-silver text-graphite text-[13px] font-bold rounded-[8px] hover:bg-stone/30 transition-colors duration-150"
+                className="h-10 px-5 bg-silver text-graphite text-[13px] font-bold rounded-[8px] hover:bg-stone/30 transition-colors duration-150 ml-auto"
               >
                 외부 캘린더 연동하기
               </button>

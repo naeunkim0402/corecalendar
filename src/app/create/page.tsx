@@ -486,7 +486,12 @@ export default function CreateMeetingPage() {
                   </div>
                 </section>
 
-                <div className="flex justify-end">
+                <div className="flex flex-col items-end gap-2">
+                  {selectedCount >= 2 && recommendations.length === 0 && (
+                    <p className="text-[12px] text-error">
+                      선택한 참석자들의 일정이 모두 겹쳐 가능한 시간대가 없어요. 필수 참석자를 줄이거나 선택 참석으로 변경해보세요.
+                    </p>
+                  )}
                   <Button size="lg" onClick={() => setStep("recommend")} disabled={selectedCount < 2 || recommendations.length === 0}>
                     회의 시간 추천받기
                   </Button>
@@ -497,26 +502,66 @@ export default function CreateMeetingPage() {
             {/* STEP 2 */}
             {step === "recommend" && (
               <motion.div key="recommend" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                <div className="text-center mb-10">
-                  <h2 className="text-[24px] font-bold text-graphite tracking-tight">
-                    선택한 기간에서 최적의 시간 {topSlots.length}개를 찾았어요
-                  </h2>
-                  <p className="text-[13px] text-stone mt-2">
-                    아래 추천 시간 중 선택해보세요!
-                  </p>
-                </div>
+                {topSlots.length === 0 ? (
+                  /* ── 빈 상태: 가능한 시간대 없음 ── */
+                  <div className="flex flex-col items-center justify-center py-20 text-center">
+                    <div className="w-16 h-16 rounded-[16px] bg-mist flex items-center justify-center mb-5">
+                      <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+                        <rect x="3" y="5" width="22" height="20" rx="3" stroke="#d1d6db" strokeWidth="1.6" />
+                        <path d="M3 12h22M9 2v5M19 2v5" stroke="#d1d6db" strokeWidth="1.6" strokeLinecap="round" />
+                        <path d="M10 17l8 0M14 14v6" stroke="#d1d6db" strokeWidth="1.6" strokeLinecap="round" />
+                      </svg>
+                    </div>
+                    <h2 className="text-[20px] font-bold text-graphite mb-2">
+                      가능한 시간대를 찾지 못했어요
+                    </h2>
+                    <p className="text-[14px] text-slate mb-1 leading-relaxed">
+                      필수 참석자의 일정이 겹쳐 모두 가능한 시간이 없어요.
+                    </p>
+                    <p className="text-[13px] text-stone mb-8 leading-relaxed">
+                      일부 참석자를 선택 참석으로 바꾸거나<br />날짜 범위를 넓혀보세요.
+                    </p>
+                    <Button size="lg" onClick={() => setStep("input")}>
+                      ← 참석자 수정하기
+                    </Button>
+                  </div>
+                ) : (
+                  /* ── 추천 결과 ── */
+                  <>
+                    <div className="text-center mb-10">
+                      <h2 className="text-[24px] font-bold text-graphite tracking-tight">
+                        {topSlots.length === 1
+                          ? "선택한 기간에서 가능한 시간 1개를 찾았어요"
+                          : topSlots.length === 2
+                          ? "선택한 기간에서 최적의 시간 2개를 찾았어요"
+                          : "선택한 기간에서 최적의 시간 3개를 찾았어요"}
+                      </h2>
+                      <p className="text-[13px] text-stone mt-2">
+                        {topSlots.length < 3
+                          ? "필수 참석자를 조정하면 더 많은 옵션을 찾을 수 있어요"
+                          : "아래 추천 시간 중 선택해보세요!"}
+                      </p>
+                    </div>
 
-                <div className="grid grid-cols-3 gap-4">
-                  {topSlots.map((slot, i) => (
-                    <SlotCard key={`${slot.day}-${slot.hour}`} slot={slot} rank={i}
-                      selectedPeople={selectedPeople} onConfirm={() => handleConfirm(slot)} />
-                  ))}
-                </div>
+                    <div className={`grid gap-4 ${
+                      topSlots.length === 1
+                        ? "grid-cols-1 max-w-[360px] mx-auto"
+                        : topSlots.length === 2
+                        ? "grid-cols-2 max-w-[740px] mx-auto"
+                        : "grid-cols-3"
+                    }`}>
+                      {topSlots.map((slot, i) => (
+                        <SlotCard key={`${slot.day}-${slot.hour}`} slot={slot} rank={i}
+                          selectedPeople={selectedPeople} onConfirm={() => handleConfirm(slot)} />
+                      ))}
+                    </div>
 
-                <button onClick={() => setStep("input")}
-                  className="w-full mt-5 py-3 text-[13px] font-semibold text-stone hover:text-charcoal transition-colors duration-150">
-                  ← 참석자 수정
-                </button>
+                    <button onClick={() => setStep("input")}
+                      className="w-full mt-5 py-3 text-[13px] font-semibold text-stone hover:text-charcoal transition-colors duration-150">
+                      ← 참석자 수정
+                    </button>
+                  </>
+                )}
               </motion.div>
             )}
 

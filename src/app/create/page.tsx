@@ -348,23 +348,26 @@ export default function CreateMeetingPage() {
   // 기준 주 시작일 (일~금 day 0~4 = 7/14~7/18)
   const WEEK_START_MS = new Date("2026-07-14").getTime();
 
-  const recommendations = useMemo(() => {
+  // 전체 유효 슬롯 (날짜 필터 적용, 시간 빠른 순 정렬) — 히트맵에 사용
+  const allSlots = useMemo(() => {
     const people = PEOPLE.filter((p) => selectedPeople[p.id]).map((p) => ({
       id: p.id, name: p.name, attendance: selectedPeople[p.id],
     }));
     const all = computeRecommendations(people);
-
-    if (!dateStart || !dateEnd) return all;
-
-    const startDay = Math.round((new Date(dateStart).getTime() - WEEK_START_MS) / 86400000);
-    const endDay   = Math.round((new Date(dateEnd).getTime()   - WEEK_START_MS) / 86400000);
-
-    return all.filter((slot) => slot.day >= startDay && slot.day <= endDay).slice(0, 3);
+    const filtered = (dateStart && dateEnd)
+      ? (() => {
+          const startDay = Math.round((new Date(dateStart).getTime() - WEEK_START_MS) / 86400000);
+          const endDay   = Math.round((new Date(dateEnd).getTime()   - WEEK_START_MS) / 86400000);
+          return all.filter((slot) => slot.day >= startDay && slot.day <= endDay);
+        })()
+      : all;
+    return [...filtered].sort((a, b) => a.day !== b.day ? a.day - b.day : a.hour - b.hour);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedPeople, dateStart, dateEnd]);
 
-  const safeIdx = Math.min(selectedSlotIdx, Math.max(0, recommendations.length - 1));
-  const featuredSlot = recommendations[safeIdx];
+  // 카드에 보여줄 상위 3개 (시간 빠른 순)
+  const recommendations = allSlots.slice(0, 3);
+  const featuredSlot = recommendations[0];
 
   const togglePerson = (id: string) => {
     setSelectedPeople((prev) => {
@@ -609,24 +612,23 @@ export default function CreateMeetingPage() {
                               <>
                                 <div key={`lbl-${hour}`} className="text-[10px] text-stone text-right pr-2 flex items-center justify-end tabular-nums">{hour}:00</div>
                                 {[0,1,2,3,4].map((day) => {
-                                  const slot = recommendations.find((s) => s.day === day && s.hour === hour);
-                                  const isSelected = slot && recommendations.indexOf(slot) === safeIdx;
+                                  const slot = allSlots.find((s) => s.day === day && s.hour === hour);
+                                  const isTop3 = slot ? recommendations.includes(slot) : false;
                                   if (!slot) {
                                     return <div key={day} className="h-7 rounded-[4px] bg-mist" title="필수 참석자 불가" />;
                                   }
                                   const ratio = slot.totalAttendees / slot.maxAttendees;
                                   const bg = ratio === 1 ? "bg-[#3182F6]" : ratio >= 0.7 ? "bg-[#3182F6]/55" : "bg-[#3182F6]/25";
                                   return (
-                                    <button
+                                    <div
                                       key={day}
-                                      onClick={() => setSelectedSlotIdx(recommendations.indexOf(slot))}
                                       title={`${slot.totalAttendees}/${slot.maxAttendees}명 가능${slot.preferNotCount > 0 ? ` · 비선호 ${slot.preferNotCount}명` : ""}`}
-                                      className={`relative h-7 rounded-[4px] ${bg} transition-all hover:opacity-80 ${isSelected ? "ring-2 ring-[#3182F6] ring-offset-1" : ""}`}
+                                      className={`relative h-7 rounded-[4px] ${bg} ${isTop3 ? "ring-2 ring-[#3182F6] ring-offset-1" : ""}`}
                                     >
                                       {slot.preferNotCount > 0 && (
                                         <span className="absolute top-0.5 right-0.5 w-1.5 h-1.5 rounded-full bg-warning" />
                                       )}
-                                    </button>
+                                    </div>
                                   );
                                 })}
                               </>

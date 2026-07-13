@@ -310,12 +310,23 @@ export default function CreateMeetingPage() {
   const selectedCount = Object.keys(selectedPeople).length;
   const requiredCount = Object.values(selectedPeople).filter((v) => v === "required").length;
 
+  // 기준 주 시작일 (일~금 day 0~4 = 7/14~7/18)
+  const WEEK_START_MS = new Date("2026-07-14").getTime();
+
   const recommendations = useMemo(() => {
     const people = PEOPLE.filter((p) => selectedPeople[p.id]).map((p) => ({
       id: p.id, name: p.name, attendance: selectedPeople[p.id],
     }));
-    return computeRecommendations(people);
-  }, [selectedPeople]);
+    const all = computeRecommendations(people);
+
+    if (!dateStart || !dateEnd) return all;
+
+    const startDay = Math.round((new Date(dateStart).getTime() - WEEK_START_MS) / 86400000);
+    const endDay   = Math.round((new Date(dateEnd).getTime()   - WEEK_START_MS) / 86400000);
+
+    return all.filter((slot) => slot.day >= startDay && slot.day <= endDay);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedPeople, dateStart, dateEnd]);
 
   const topSlots = recommendations.slice(0, 3);
 

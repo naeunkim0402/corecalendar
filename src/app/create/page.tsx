@@ -36,17 +36,14 @@ function AttendeeAvatar({ a, compact = false }: { a: AttendeeSlotState; compact?
         title={tooltip}
       >
         {a.avatar}
-        {!a.verified && a.state !== "absent" && (
-          <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 bg-stone rounded-full border-[1.5px] border-white" />
-        )}
       </div>
       {!compact && (
         <span className={`text-[9px] font-semibold leading-none ${
           a.state === "absent" ? "text-slate" :
           a.state === "prefer_not" ? "text-warning" :
-          !a.verified ? "text-stone" : "text-transparent select-none"
+          "text-transparent select-none"
         }`}>
-          {a.state === "absent" ? "불참" : a.state === "prefer_not" ? "비선호" : !a.verified ? "미확인" : "·"}
+          {a.state === "absent" ? "불참" : a.state === "prefer_not" ? "비선호" : "·"}
         </span>
       )}
     </div>

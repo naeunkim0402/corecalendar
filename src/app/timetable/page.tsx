@@ -1,5 +1,9 @@
 "use client";
 
+// [설계 의도]: 유저가 매주 시간표를 채우는 노동을 하지 않도록 9to6 외 시간 및 점심시간대
+// 기본 루틴 레이어를 자동 세팅하고, 외부 연동 시 Diff-View 패널을 통해 데이터 충돌을
+// 원스크린으로 해결하며, 타인 조회 시 편집 권한을 완벽히 차단한다.
+
 import { useState, useCallback, useRef, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { AppShell } from "@/components/ui";
@@ -287,6 +291,9 @@ function TimetableContent() {
   const [showAddModal, setShowAddModal] = useState(() => searchParams.get("add") === "1");
   const [slotTags, setSlotTags] = useState<Record<string, string>>({});
   const [teamDropdownOpen, setTeamDropdownOpen] = useState(false);
+  const [showSyncPanel, setShowSyncPanel] = useState(false);
+  const [syncChoice, setSyncChoice] = useState<"keep" | "overwrite" | null>(null);
+  const [syncDone, setSyncDone] = useState(false);
   const gridRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -322,6 +329,20 @@ function TimetableContent() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // ── 1. 기본 루틴 자동 세팅 (최초 1회) ──
+  useEffect(() => {
+    if (!loaded || viewingPerson !== "f") return;
+    if (localStorage.getItem("base_routine_set")) return;
+    const base: Record<string, SlotState> = { ...timetable };
+    for (let d = 0; d < 5; d++) {
+      base[`${d}-12`] = "unavailable"; // 점심
+      base[`${d}-13`] = "prefer_not";  // 점심 직후
+    }
+    update(base);
+    localStorage.setItem("base_routine_set", "true");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loaded]);
+
   const paint = useCallback((key: string) => {
     if (!editMode) return;
     const state = timetable[key] || "available";
@@ -347,6 +368,17 @@ function TimetableContent() {
   const handleSave = () => {
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
+  };
+
+  // ── 2. 외부 캘린더 동기화 완료 ──
+  const handleSyncComplete = () => {
+    if (syncChoice === "overwrite") {
+      update({ ...timetable, "1-14": "unavailable" });
+    }
+    setShowSyncPanel(false);
+    setSyncChoice(null);
+    setSyncDone(true);
+    setTimeout(() => setSyncDone(false), 2500);
   };
 
   if (!loaded) return null;
@@ -429,15 +461,14 @@ function TimetableContent() {
                   </div>
                 )}
               </div>
-              <button
-                onClick={() => setShowAddModal(true)}
-                disabled={!isMe}
-                className={`inline-flex items-center h-9 px-4 text-[13px] font-bold rounded-[8px] transition-colors duration-150 ${
-                  isMe ? "bg-mist text-graphite hover:bg-silver" : "bg-mist/50 text-slate/40 cursor-not-allowed"
-                }`}
-              >
-                + 일정 등록
-              </button>
+              {isMe && (
+                <button
+                  onClick={() => setShowAddModal(true)}
+                  className="inline-flex items-center h-9 px-4 bg-mist text-graphite text-[13px] font-bold rounded-[8px] hover:bg-silver transition-colors duration-150"
+                >
+                  + 일정 등록
+                </button>
+              )}
             </div>
           </div>
         </header>
@@ -467,6 +498,7 @@ function TimetableContent() {
                 비선호 시간 선택하기
               </button>
               <button
+                onClick={() => setShowSyncPanel((v) => !v)}
                 className="h-10 px-5 bg-silver text-graphite text-[13px] font-bold rounded-[8px] hover:bg-stone/30 transition-colors duration-150 ml-auto"
               >
                 외부 캘린더 연동하기
@@ -540,8 +572,8 @@ function TimetableContent() {
                             className={`h-[44px] border-t border-l border-silver transition-colors duration-100 flex flex-col items-center justify-center ${STATE_COLORS[state]} ${
                               isOpposite ? "opacity-30 cursor-not-allowed" : editMode ? "cursor-pointer" : isMe ? "cursor-pointer" : "cursor-default"
                             }`}
-                            onPointerDown={() => isEditable && handlePointerDown(key)}
-                            onPointerEnter={() => isEditable && handlePointerEnter(key)}
+                            onPointerDown={() => isMe && isEditable && handlePointerDown(key)}
+                            onPointerEnter={() => isMe && isEditable && handlePointerEnter(key)}
                           >
                             {state !== "available" && (
                               <span className={`text-[12px] font-medium ${
@@ -566,6 +598,75 @@ function TimetableContent() {
           </div>
         </div>
       </main>
+
+      {/* ── 2. 외부 캘린더 연동 Diff-View 패널 ── */}
+      <div className={`fixed top-0 right-[300px] h-full w-[300px] bg-white border-l border-silver z-30 flex flex-col shadow-modal transition-transform duration-300 ${showSyncPanel ? "translate-x-0" : "translate-x-full pointer-events-none"}`}>
+        <div className="px-5 py-4 border-b border-silver flex items-start justify-between">
+          <div>
+            <h3 className="text-[14px] font-bold text-graphite">외부 캘린더 연동 검수</h3>
+            <p className="text-[12px] text-warning mt-0.5 font-semibold">충돌 1건 발견</p>
+          </div>
+          <button onClick={() => { setShowSyncPanel(false); setSyncChoice(null); }} className="text-stone hover:text-graphite p-1 rounded-full hover:bg-mist transition-colors">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3.5 3.5l7 7M10.5 3.5l-7 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-5">
+          <p className="text-[12px] text-slate leading-relaxed mb-5">
+            기존 Corecalendar 일정과 중복되는 외부 일정이 있습니다. 유지할 일정을 선택해주세요.
+          </p>
+
+          <div className="rounded-[12px] border border-silver overflow-hidden">
+            <button
+              onClick={() => setSyncChoice("keep")}
+              className={`w-full px-4 py-4 text-left border-b border-silver transition-colors duration-150 ${syncChoice === "keep" ? "bg-ink/6" : "hover:bg-mist"}`}
+            >
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[11px] font-bold text-slate uppercase tracking-wider">내 일정 유지</span>
+                {syncChoice === "keep" && (
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7.5l3 3 5-6" stroke="#101010" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                )}
+              </div>
+              <p className="text-[13px] font-semibold text-graphite">화요일 14:00 — 외근</p>
+              <p className="text-[12px] text-slate mt-0.5">Corecalendar에 등록된 일정</p>
+            </button>
+            <button
+              onClick={() => setSyncChoice("overwrite")}
+              className={`w-full px-4 py-4 text-left transition-colors duration-150 ${syncChoice === "overwrite" ? "bg-ink/6" : "hover:bg-mist"}`}
+            >
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[11px] font-bold text-slate uppercase tracking-wider">외부 일정 덮어쓰기</span>
+                {syncChoice === "overwrite" && (
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7.5l3 3 5-6" stroke="#101010" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                )}
+              </div>
+              <p className="text-[13px] font-semibold text-graphite">화요일 14:00 — 구글: 업체 미팅</p>
+              <p className="text-[12px] text-slate mt-0.5">Google Calendar에서 가져온 일정</p>
+            </button>
+          </div>
+        </div>
+
+        <div className="p-5 border-t border-silver">
+          <button
+            onClick={handleSyncComplete}
+            disabled={!syncChoice}
+            className="w-full h-11 bg-ink text-white text-[13px] font-bold rounded-[10px] disabled:opacity-30 disabled:cursor-not-allowed active:bg-black transition-colors duration-150"
+          >
+            선택한 일정으로 동기화 완료
+          </button>
+        </div>
+      </div>
+
+      {/* syncDone 토스트 */}
+      {syncDone && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-5 py-3 bg-graphite text-white text-[13px] font-semibold rounded-[12px] shadow-modal pointer-events-none">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <circle cx="8" cy="8" r="6" fill="#03b26c" fillOpacity="0.25" />
+            <path d="M5.5 8l1.8 1.8L10.5 6.5" stroke="#03b26c" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          캘린더 동기화가 완료되었습니다
+        </div>
+      )}
 
       {/* 저장 완료 토스트 */}
       {saved && (

@@ -3,7 +3,7 @@
 // [설계 의도]: 장식적인 dot UI와 서술형 문구를 걷어내어 정보 밀도를 극대화하고,
 // 드롭다운 아이콘 및 캘린더 피커의 인터랙션을 일관되게 정제하여 정품 B2B SaaS의 시각적 완성도를 부여한다.
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { AppShell } from "@/components/ui";
 import { PEOPLE } from "@/lib/data";
 import { useMeetings } from "@/lib/store";
@@ -140,6 +140,30 @@ export default function Home() {
 
   const todayMeetings = meetings.filter((m) => m.status === "approved" || m.status === "pending");
 
+  // ── 오늘 스케줄 (데모 기준 day 0 = 월요일 고정) ──
+  const TODAY_DAY = 0;
+  const [personalSchedules, setPersonalSchedules] = useState<Array<{ startHour: number; endHour: number; title: string; tag: string }>>([]);
+  useEffect(() => {
+    type Raw = { groupId?: string; day: number; hour: number; personId: string; title: string; tag: string };
+    const raw: Raw[] = JSON.parse(localStorage.getItem("internal_schedules") || "[]");
+    const mine = raw.filter(s => s.personId === "f" && s.day === TODAY_DAY);
+    const gMap: Record<string, Raw[]> = {};
+    mine.forEach(s => { const k = s.groupId || `l-${s.hour}`; (gMap[k] ||= []).push(s); });
+    const items = Object.values(gMap).map(records => {
+      const sorted = [...records].sort((a, b) => a.hour - b.hour);
+      return { startHour: sorted[0].hour, endHour: sorted[sorted.length - 1].hour + 1, title: sorted[0].title, tag: sorted[0].tag };
+    });
+    setPersonalSchedules(items.sort((a, b) => a.startHour - b.startHour));
+  }, []);
+
+  const todayTimeline = useMemo(() => {
+    const meetingItems = meetings
+      .filter(m => m.day === TODAY_DAY && m.status !== "rejected")
+      .map(m => ({ startHour: m.hour, endHour: m.hour + 1, title: m.title, tag: undefined as string | undefined, type: "meeting" as const }));
+    const scheduleItems = personalSchedules.map(s => ({ ...s, type: "schedule" as const }));
+    return [...meetingItems, ...scheduleItems].sort((a, b) => a.startHour - b.startHour);
+  }, [meetings, personalSchedules]);
+
   const handleDeleteConfirm = () => {
     if (deleteTarget === "all") {
       clearAll();
@@ -252,7 +276,37 @@ export default function Home() {
             )}
           </section>
 
-          {/* 회의 목록 */}
+          {/* 오늘 스케줄 */}
+          <section className="mb-14">
+            <div className="mb-5 px-1">
+              <h3 className="text-[17px] font-bold text-graphite">오늘 스케줄</h3>
+              <p className="text-[13px] text-stone mt-0.5">7/14 월요일 · 내 일정</p>
+            </div>
+            {todayTimeline.length > 0 ? (
+              <div className="bg-white rounded-[16px] shadow-card divide-y divide-mist">
+                {todayTimeline.map((item, idx) => (
+                  <div key={idx} className="flex items-center gap-4 px-6 py-4">
+                    <span className={`w-2 h-2 rounded-full shrink-0 ${item.type === "meeting" ? "bg-[#3182f6]" : "bg-[#94a3b8]"}`} />
+                    <span className="text-[12px] font-semibold text-slate tabular-nums w-[120px] shrink-0">
+                      {String(item.startHour).padStart(2, "0")}:00 – {String(item.endHour).padStart(2, "0")}:00
+                    </span>
+                    <span className="flex-1 text-[14px] font-semibold text-graphite truncate">{item.title}</span>
+                    {item.type === "meeting" ? (
+                      <span className="px-2.5 py-1 rounded-full bg-[#3182f6]/10 text-[#3182f6] text-[11px] font-bold shrink-0">회의</span>
+                    ) : item.tag ? (
+                      <span className="px-2.5 py-1 rounded-full bg-mist text-slate text-[11px] font-bold shrink-0">{item.tag}</span>
+                    ) : null}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="bg-white rounded-[16px] shadow-card flex items-center justify-center py-10">
+                <p className="text-[14px] text-stone">오늘은 비어 있어요</p>
+              </div>
+            )}
+          </section>
+
+          {/* 예정 회의 */}
           {loaded && meetings.filter((m) => m.status !== "rejected").length > 0 && (
             <section className="mb-14">
               <div className="flex items-center justify-between mb-5 px-1">

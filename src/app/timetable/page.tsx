@@ -232,6 +232,57 @@ const STATE_LABELS: Record<SlotState, string> = {
 
 type BrushType = "unavailable" | "prefer_not";
 
+// ── 블록 병합 렌더링 ──
+const SLOT_HEIGHT = 44;
+const ROW_GAP = 3;
+const ROW_HEIGHT = SLOT_HEIGHT + ROW_GAP; // 47
+
+const TAG_BAR_COLORS: Record<string, string> = {
+  기타: "#94a3b8", 외근: "#f59e0b", 회의: "#3182f6", 휴가: "#34c759", 원온원: "#af52de",
+};
+
+type SlotData = { tag: string; groupId: string; title: string };
+type MergedBlock = {
+  type: "schedule" | "unavailable" | "prefer_not";
+  startHour: number; span: number; startIdx: number;
+  tag?: string; title?: string; groupId?: string;
+};
+
+function computeMergedBlocksForDay(
+  day: number,
+  timetable: Record<string, SlotState>,
+  slotData: Record<string, SlotData>,
+): MergedBlock[] {
+  const blocks: MergedBlock[] = [];
+  let i = 0;
+  while (i < HOURS.length) {
+    const hour = HOURS[i];
+    const key = `${day}-${hour}`;
+    const sd = slotData[key];
+    const state = timetable[key] || "available";
+    if (sd) {
+      const { groupId } = sd;
+      let j = i;
+      while (j < HOURS.length && slotData[`${day}-${HOURS[j]}`]?.groupId === groupId) j++;
+      blocks.push({ type: "schedule", startHour: hour, span: j - i, startIdx: i, tag: sd.tag, title: sd.title, groupId });
+      i = j;
+    } else if (state === "unavailable") {
+      let j = i;
+      while (j < HOURS.length && !slotData[`${day}-${HOURS[j]}`] && (timetable[`${day}-${HOURS[j]}`] || "available") === "unavailable") j++;
+      blocks.push({ type: "unavailable", startHour: hour, span: j - i, startIdx: i });
+      i = j;
+    } else if (state === "prefer_not") {
+      let j = i;
+      while (j < HOURS.length && !slotData[`${day}-${HOURS[j]}`] && (timetable[`${day}-${HOURS[j]}`] || "available") === "prefer_not") j++;
+      blocks.push({ type: "prefer_not", startHour: hour, span: j - i, startIdx: i });
+      i = j;
+    } else {
+      i++;
+    }
+  }
+  return blocks;
+}
+
 // ── 주차 계산 유틸 ──
 const REFERENCE_MONDAY = new Date(2026, 6, 13);
 
@@ -290,7 +341,8 @@ function TimetableContent() {
   const [saved, setSaved] = useState(false);
   const [weekOffset, setWeekOffset] = useState(0);
   const [showAddModal, setShowAddModal] = useState(() => searchParams.get("add") === "1");
-  const [slotTags, setSlotTags] = useState<Record<string, string>>({});
+  const [slotData, setSlotData] = useState<Record<string, SlotData>>({});
+  const [deletePopover, setDeletePopover] = useState<{ groupId: string; day: number; x: number; y: number } | null>(null);
   const [showSyncPanel, setShowSyncPanel] = useState(false);
   const [syncChoice, setSyncChoice] = useState<"keep" | "overwrite" | null>(null);
   const [syncDone, setSyncDone] = useState(false);
@@ -300,12 +352,34 @@ function TimetableContent() {
   const weekInfo = getWeekInfo(weekOffset);
 
   useEffect(() => {
-    const schedules = JSON.parse(localStorage.getItem("internal_schedules") || "[]");
-    const tags: Record<string, string> = {};
-    for (const s of schedules) {
-      if (s.personId === "f") tags[`${s.day}-${s.hour}`] = s.tag;
-    }
-    setSlotTags(tags);
+    type RawSchedule = { groupId?: string; title: string; tag: string; day: number; hour: number; personId: string };
+    const raw: RawSchedule[] = JSON.parse(localStorage.getItem("internal_schedules") || "[]");
+    const data: Record<string, SlotData> = {};
+
+    // groupId 있는 레코드 먼저 처리
+    raw.filter(s => s.groupId && s.personId === "f").forEach(s => {
+      data[`${s.day}-${s.hour}`] = { tag: s.tag, groupId: s.groupId!, title: s.title };
+    });
+
+    // 레거시 레코드: (day, tag, title)이 같고 hour 연속이면 동일 groupId
+    const legacy = raw.filter(s => !s.groupId && s.personId === "f");
+    const legacyMap: Record<string, RawSchedule[]> = {};
+    legacy.forEach(s => { const k = `${s.day}|${s.tag}|${s.title}`; (legacyMap[k] ||= []).push(s); });
+    Object.values(legacyMap).forEach(records => {
+      const sorted = [...records].sort((a, b) => a.hour - b.hour);
+      let runStart = 0;
+      for (let i = 1; i <= sorted.length; i++) {
+        if (i === sorted.length || sorted[i].hour !== sorted[i - 1].hour + 1) {
+          const synId = `legacy-${sorted[runStart].day}-${sorted[runStart].tag}-${sorted[runStart].hour}`;
+          for (let j = runStart; j < i; j++) {
+            data[`${sorted[j].day}-${sorted[j].hour}`] = { tag: sorted[j].tag, groupId: synId, title: sorted[j].title };
+          }
+          runStart = i;
+        }
+      }
+    });
+
+    setSlotData(data);
   }, [loaded]);
 
   useEffect(() => {
@@ -331,6 +405,7 @@ function TimetableContent() {
 
   const paint = useCallback((key: string) => {
     if (!editMode) return;
+    if (slotData[key]) return; // 일정 블록은 브러시 대상 제외
     const state = timetable[key] || "available";
     // 반대 상태 셀은 수정 불가
     if (state !== "available" && state !== editMode) return;
@@ -355,6 +430,20 @@ function TimetableContent() {
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };
+
+  const handleDeleteBlock = useCallback((groupId: string) => {
+    const keys = Object.entries(slotData).filter(([, v]) => v.groupId === groupId).map(([k]) => k);
+    const newTable = { ...timetable };
+    keys.forEach(k => { newTable[k] = "available" as SlotState; });
+    update(newTable);
+    type RawSchedule = { groupId?: string; day: number; hour: number; personId: string };
+    const schedules: RawSchedule[] = JSON.parse(localStorage.getItem("internal_schedules") || "[]");
+    localStorage.setItem("internal_schedules", JSON.stringify(
+      schedules.filter(s => s.groupId ? s.groupId !== groupId : !keys.includes(`${s.day}-${s.hour}`) || s.personId !== "f")
+    ));
+    setSlotData(prev => { const next = { ...prev }; keys.forEach(k => delete next[k]); return next; });
+    setDeletePopover(null);
+  }, [slotData, timetable, update]);
 
   // ── 2. 외부 캘린더 동기화 완료 ──
   const handleSyncComplete = () => {
@@ -494,9 +583,10 @@ function TimetableContent() {
                 ))}
               </div>
 
-              <div className="grid grid-cols-[56px_repeat(5,1fr)] gap-y-[3px] gap-x-[4px]">
-                {HOURS.map((hour) => {
-                  return (
+              <div className="relative">
+                {/* 베이스 그리드 (배경색 + 드래그 이벤트) */}
+                <div className="grid grid-cols-[56px_repeat(5,1fr)] gap-y-[3px] gap-x-[4px]">
+                  {HOURS.map((hour) => (
                     <div key={`row-${hour}`} className="contents">
                       <div className="relative h-[44px]">
                         <span className={`absolute ${hour === 0 ? "top-[2px]" : "-top-[7px]"} right-3 text-[12px] text-slate tabular-nums tracking-tight font-medium leading-none`}>
@@ -507,34 +597,82 @@ function TimetableContent() {
                         const key = `${dayIdx}-${hour}`;
                         const state = timetable[key] || "available";
                         const isOpposite = editMode && state !== "available" && state !== editMode;
-                        const isEditable = editMode && !isOpposite;
-
+                        const isEditable = editMode && !isOpposite && !slotData[key];
                         return (
                           <div
                             key={key}
-                            className={`relative h-[44px] rounded-[6px] transition-colors duration-100 flex items-center justify-center ${STATE_COLORS[state]} ${
-                              isOpposite ? "opacity-30 cursor-not-allowed" : "cursor-pointer"
+                            className={`h-[44px] rounded-[6px] transition-colors duration-100 ${STATE_COLORS[state]} ${
+                              isOpposite ? "opacity-30 cursor-not-allowed" : slotData[key] ? "cursor-default" : "cursor-pointer"
                             }`}
                             onPointerDown={() => isEditable && handlePointerDown(key)}
                             onPointerEnter={() => isEditable && handlePointerEnter(key)}
-                          >
-                            {state !== "available" && (
-                              <span className="text-[12px] font-semibold">{STATE_LABELS[state]}</span>
-                            )}
-                          </div>
+                          />
                         );
                       })}
                     </div>
-                  );
-                })}
-                {/* 24:00 레이블 경계 */}
-                <div className="contents">
-                  <div className="relative h-[14px]">
-                    <span className="absolute -top-[7px] right-3 text-[12px] text-slate tabular-nums tracking-tight font-medium leading-none">
-                      24:00
-                    </span>
+                  ))}
+                  {/* 24:00 레이블 경계 */}
+                  <div className="contents">
+                    <div className="relative h-[14px]">
+                      <span className="absolute -top-[7px] right-3 text-[12px] text-slate tabular-nums tracking-tight font-medium leading-none">
+                        24:00
+                      </span>
+                    </div>
+                    {DAYS.map((_, i) => <div key={i} className="h-[14px]" />)}
                   </div>
-                  {DAYS.map((_, i) => <div key={i} className="h-[14px]" />)}
+                </div>
+
+                {/* 블록 병합 오버레이 */}
+                <div className="absolute inset-0 pointer-events-none">
+                  <div className="grid grid-cols-[56px_repeat(5,1fr)] gap-x-[4px] h-full">
+                    <div />
+                    {[0, 1, 2, 3, 4].map((dayIdx) => (
+                      <div key={dayIdx} className="relative">
+                        {computeMergedBlocksForDay(dayIdx, timetable, slotData).map((block) => {
+                          const top = block.startIdx * ROW_HEIGHT;
+                          const height = block.span * SLOT_HEIGHT + (block.span - 1) * ROW_GAP;
+                          if (block.type === "schedule") {
+                            const barColor = TAG_BAR_COLORS[block.tag!] ?? "#94a3b8";
+                            const label = block.span > 1
+                              ? `${block.tag} · ${formatHour(block.startHour)}–${formatHour(block.startHour + block.span)}`
+                              : block.tag!;
+                            return (
+                              <div
+                                key={block.groupId}
+                                className="absolute inset-x-0 bg-white rounded-[6px] shadow-sm overflow-hidden pointer-events-auto cursor-pointer"
+                                style={{ top, height }}
+                                onClick={(e) => {
+                                  if (!editMode) return;
+                                  e.stopPropagation();
+                                  setDeletePopover({ groupId: block.groupId!, day: dayIdx, x: e.clientX, y: e.clientY });
+                                }}
+                              >
+                                <div className="absolute left-0 top-0 bottom-0 w-[3px]" style={{ backgroundColor: barColor }} />
+                                <div className="absolute inset-y-0 left-[7px] right-0 flex items-center pr-2">
+                                  <span className="text-[11px] font-semibold text-graphite truncate">{label}</span>
+                                </div>
+                              </div>
+                            );
+                          }
+                          if (block.type === "unavailable") {
+                            return (
+                              <div key={`u-${block.startHour}`} className="absolute inset-x-0 bg-[#fff0f1] rounded-[6px] flex items-center justify-center" style={{ top, height }}>
+                                <span className="text-[12px] font-semibold text-[#f04452]">불가</span>
+                              </div>
+                            );
+                          }
+                          if (block.type === "prefer_not") {
+                            return (
+                              <div key={`p-${block.startHour}`} className="absolute inset-x-0 bg-[#fff5eb] rounded-[6px] flex items-center justify-center" style={{ top, height }}>
+                                <span className="text-[12px] font-semibold text-[#ff9800]">비선호</span>
+                              </div>
+                            );
+                          }
+                          return null;
+                        })}
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
@@ -622,6 +760,31 @@ function TimetableContent() {
         </div>
       )}
 
+      {/* 일정 삭제 팝오버 */}
+      {deletePopover && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setDeletePopover(null)} />
+          <div
+            className="fixed z-50 bg-white rounded-[12px] shadow-modal py-1 w-[148px]"
+            style={{ top: deletePopover.y, left: deletePopover.x }}
+            onClick={e => e.stopPropagation()}
+          >
+            <button
+              onClick={() => handleDeleteBlock(deletePopover.groupId)}
+              className="w-full text-left px-4 py-2.5 text-[13px] font-semibold text-[#f04452] hover:bg-mist rounded-[10px] transition-colors"
+            >
+              일정 삭제
+            </button>
+            <button
+              onClick={() => setDeletePopover(null)}
+              className="w-full text-left px-4 py-2.5 text-[13px] text-slate hover:bg-mist rounded-[10px] transition-colors"
+            >
+              취소
+            </button>
+          </div>
+        </>
+      )}
+
       {showAddModal && (
         <AddScheduleModal
           onClose={() => setShowAddModal(false)}
@@ -632,26 +795,20 @@ function TimetableContent() {
             }
             update(newTable);
 
+            const groupId = `sch-${Date.now()}`;
             const schedules = JSON.parse(localStorage.getItem("internal_schedules") || "[]");
             for (let h = startHour; h < endHour; h++) {
               schedules.push({
-                id: `${Date.now()}-${h}`,
-                title,
-                tag,
-                day,
-                hour: h,
-                personId: "f",
-                createdAt: new Date().toISOString(),
+                id: `${groupId}-${h}`, groupId, title, tag, day, hour: h,
+                personId: "f", createdAt: new Date().toISOString(),
               });
             }
             localStorage.setItem("internal_schedules", JSON.stringify(schedules));
 
-            setSlotTags((prev) => {
-              const updated = { ...prev };
-              for (let h = startHour; h < endHour; h++) {
-                updated[`${day}-${h}`] = tag;
-              }
-              return updated;
+            setSlotData(prev => {
+              const next = { ...prev };
+              for (let h = startHour; h < endHour; h++) next[`${day}-${h}`] = { tag, groupId, title };
+              return next;
             });
           }}
         />

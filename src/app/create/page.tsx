@@ -365,7 +365,6 @@ export default function CreateMeetingPage() {
 
   const safeIdx = Math.min(selectedSlotIdx, Math.max(0, recommendations.length - 1));
   const featuredSlot = recommendations[safeIdx];
-  const otherSlots = recommendations.filter((_, i) => i !== safeIdx);
 
   const togglePerson = (id: string) => {
     setSelectedPeople((prev) => {
@@ -573,40 +572,16 @@ export default function CreateMeetingPage() {
                         최적의 시간을 찾았어요
                       </h2>
                       <p className="text-[13px] text-stone mt-1">
-                        {recommendations.length > 1 ? `${recommendations.length}개 후보 중 가장 좋은 시간이에요` : "가능한 시간이 1개예요"}
+                        {recommendations.length > 1 ? `최적의 시간 ${recommendations.length}개를 추천했어요` : "가능한 시간이 1개예요"}
                       </p>
                     </div>
 
-                    {/* 1위 Featured 카드 */}
-                    <SlotCard slot={featuredSlot} onConfirm={() => handleConfirm(featuredSlot)} />
-
-                    {/* 다른 시간 보기 */}
-                    {otherSlots.length > 0 && (
-                      <div className="mt-5">
-                        <p className="text-[12px] font-bold text-stone uppercase tracking-wider mb-3">다른 시간 보기</p>
-                        <div className="space-y-2">
-                          {otherSlots.map((slot) => {
-                            const idx = recommendations.indexOf(slot);
-                            return (
-                              <button
-                                key={`${slot.day}-${slot.hour}`}
-                                onClick={() => setSelectedSlotIdx(idx)}
-                                className="w-full bg-white rounded-[12px] shadow-card px-5 py-3.5 flex items-center gap-4 hover:shadow-card-hover transition-all text-left"
-                              >
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-[13px] font-semibold text-graphite">{slot.label.split("·")[0].trim()}</p>
-                                  <p className="text-[12px] text-slate">{slot.label.split("·")[1]?.trim()}</p>
-                                </div>
-                                <div className="flex items-center gap-1.5 shrink-0">
-                                  {slot.attendeeStates.map((a) => <AttendeeAvatar key={a.id} a={a} compact />)}
-                                </div>
-                                <span className="text-[12px] font-bold text-stone tabular-nums shrink-0">{slot.matchScore}%</span>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )}
+                    {/* 3개 카드 가로 배치 */}
+                    <div className={`grid gap-4 ${recommendations.length === 1 ? "grid-cols-1" : recommendations.length === 2 ? "grid-cols-2" : "grid-cols-3"}`}>
+                      {recommendations.map((slot) => (
+                        <SlotCard key={`${slot.day}-${slot.hour}`} slot={slot} onConfirm={() => handleConfirm(slot)} />
+                      ))}
+                    </div>
 
                     {/* 팀 가용성 히트맵 */}
                     <div className="mt-5">
@@ -614,7 +589,7 @@ export default function CreateMeetingPage() {
                         onClick={() => setShowHeatmap((v) => !v)}
                         className="flex items-center gap-1.5 text-[13px] font-semibold text-slate hover:text-graphite transition-colors mb-3"
                       >
-                        팀 가용성 한눈에 보기
+                        더 많은 시간대 보기
                         <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className={`transition-transform duration-200 ${showHeatmap ? "rotate-180" : ""}`}>
                           <path d="M4 5.5l3 3 3-3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>

@@ -559,6 +559,17 @@ function TimetableContent() {
         </div>
       </main>
 
+      {/* 저장 완료 토스트 */}
+      {saved && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-5 py-3 bg-graphite text-white text-[13px] font-semibold rounded-[12px] shadow-modal pointer-events-none">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <circle cx="8" cy="8" r="6" fill="#03b26c" fillOpacity="0.25" />
+            <path d="M5.5 8l1.8 1.8L10.5 6.5" stroke="#03b26c" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          저장되었습니다
+        </div>
+      )}
+
       {showAddModal && (
         <AddScheduleModal
           onClose={() => setShowAddModal(false)}

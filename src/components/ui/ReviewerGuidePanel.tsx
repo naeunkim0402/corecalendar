@@ -3,12 +3,20 @@
 import { useRouter } from "next/navigation";
 import { useMeetings } from "@/lib/store";
 
+const TIMETABLE_PERSON_IDS = ["a", "b", "c", "d", "e", "f"];
+
+function clearTimetableData() {
+  TIMETABLE_PERSON_IDS.forEach((id) => localStorage.removeItem(`timetable_${id}`));
+  localStorage.removeItem("internal_schedules");
+}
+
 export function ReviewerGuidePanel() {
   const router = useRouter();
   const { clearAll } = useMeetings();
 
   const resetAndGoHome = (clearWelcome: boolean, clearSync: boolean) => {
     clearAll();
+    clearTimetableData();
     if (clearWelcome) sessionStorage.removeItem("welcome_shown");
     if (clearSync) localStorage.removeItem("calendar_synced");
     router.push("/");
@@ -73,7 +81,7 @@ export function ReviewerGuidePanel() {
           </button>
 
           <button
-            onClick={clearAll}
+            onClick={() => { clearAll(); clearTimetableData(); }}
             className="w-full text-left px-4 py-4 rounded-2xl bg-white/[0.06] hover:bg-error/10 border border-white/[0.08] hover:border-error/20 transition-colors duration-200 group"
           >
             <div className="flex items-center gap-3 mb-2">

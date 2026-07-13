@@ -215,19 +215,20 @@ function AddScheduleModal({
   );
 }
 
-// [설계 의도]: 캘린더의 모든 중복 격자선을 제거하고 여백과 라운드 블록의 면 대비로 일정을 시각화하며,
-// 텍스트 노이즈를 오렌지 dot UI 마커로 대체하여 토스 특유의 미니멀한 타임라인 뷰를 마감한다.
+// [설계 의도]: 전체 캘린더 뷰를 단단한 화이트 카드 모듈로 묶어 UI의 안정감을 주고,
+// 불가(레드)/조정(오렌지) 상태를 연한 배경과 텍스트 컬러 매칭의 블록으로 직관화하여 시각적 인지 속도를 극대화한다.
 const STATE_COLORS: Record<SlotState, string> = {
   available: "bg-[#f4f5f7]",
-  unavailable: "bg-[#3182f6]",
-  prefer_not: "bg-[#a0c4ff]",
+  unavailable: "bg-[#fff0f1] text-[#f04452]",
+  prefer_not: "bg-[#fff5eb] text-[#ff9800]",
 };
 
 const STATE_LABELS: Record<SlotState, string> = {
   available: "",
   unavailable: "불가",
-  prefer_not: "비선호",
+  prefer_not: "조정",
 };
+
 
 type BrushType = "unavailable" | "prefer_not";
 
@@ -475,13 +476,13 @@ function TimetableContent() {
           )}
 
           {/* 24시간 시간표 그리드 */}
-          <div className={`select-none ${editMode ? "relative z-20" : ""}`}>
+          <div className={`bg-white rounded-[16px] shadow-[0_4px_20px_rgba(0,0,0,0.04)] p-6 select-none ${editMode ? "relative z-20" : ""}`}>
             <div
               ref={gridRef}
               className="overflow-y-auto overscroll-contain"
               style={{ maxHeight: "600px" }}
             >
-              <div className="grid grid-cols-[56px_repeat(5,1fr)] sticky top-0 z-10 bg-[#f9fafb] pb-2">
+              <div className="grid grid-cols-[56px_repeat(5,1fr)] sticky top-0 z-10 bg-white pb-2">
                 <div />
                 {DAYS.map((day, i) => (
                   <div key={i} className="text-center py-2.5">
@@ -517,8 +518,8 @@ function TimetableContent() {
                             onPointerDown={() => isEditable && handlePointerDown(key)}
                             onPointerEnter={() => isEditable && handlePointerEnter(key)}
                           >
-                            {state === "prefer_not" && (
-                              <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-[#ff9800] rounded-full" />
+                            {state !== "available" && (
+                              <span className="text-[12px] font-semibold">{STATE_LABELS[state]}</span>
                             )}
                           </div>
                         );

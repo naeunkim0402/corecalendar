@@ -7,7 +7,7 @@
 import { useState, useCallback, useRef, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { AppShell } from "@/components/ui";
-import { DAYS, HOURS, CORE_HOURS_START, PEOPLE, type SlotState, isBusinessHour } from "@/lib/data";
+import { DAYS, HOURS, CORE_HOURS_START, type SlotState, isBusinessHour } from "@/lib/data";
 import { useTimetable } from "@/lib/store";
 
 // ── 일정 태그 타입 ──
@@ -281,58 +281,40 @@ export default function TimetablePage() {
 
 function TimetableContent() {
   const searchParams = useSearchParams();
-  const [viewingPerson, setViewingPerson] = useState("f");
-  const { timetable, update, reset, loaded } = useTimetable(viewingPerson);
+  const { timetable, update, reset, loaded } = useTimetable("f");
   const [editMode, setEditMode] = useState<BrushType | null>(null);
-  const [activeBrush, setActiveBrush] = useState<BrushType>("unavailable");
   const [isPainting, setIsPainting] = useState(false);
   const [saved, setSaved] = useState(false);
   const [weekOffset, setWeekOffset] = useState(0);
   const [showAddModal, setShowAddModal] = useState(() => searchParams.get("add") === "1");
   const [slotTags, setSlotTags] = useState<Record<string, string>>({});
-  const [teamDropdownOpen, setTeamDropdownOpen] = useState(false);
   const [showSyncPanel, setShowSyncPanel] = useState(false);
   const [syncChoice, setSyncChoice] = useState<"keep" | "overwrite" | null>(null);
   const [syncDone, setSyncDone] = useState(false);
   const [syncLoading, setSyncLoading] = useState(false);
   const gridRef = useRef<HTMLDivElement>(null);
-  const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const person = PEOPLE.find((p) => p.id === viewingPerson)!;
-  const isMe = viewingPerson === "f";
   const weekInfo = getWeekInfo(weekOffset);
 
   useEffect(() => {
     const schedules = JSON.parse(localStorage.getItem("internal_schedules") || "[]");
     const tags: Record<string, string> = {};
     for (const s of schedules) {
-      if (s.personId === viewingPerson) {
-        tags[`${s.day}-${s.hour}`] = s.tag;
-      }
+      if (s.personId === "f") tags[`${s.day}-${s.hour}`] = s.tag;
     }
     setSlotTags(tags);
-  }, [viewingPerson, loaded]);
+  }, [loaded]);
 
   useEffect(() => {
     if (loaded && gridRef.current) {
       const rowHeight = 44;
       gridRef.current.scrollTop = CORE_HOURS_START * rowHeight;
     }
-  }, [loaded, viewingPerson]);
-
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setTeamDropdownOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  }, [loaded]);
 
   // ── 1. 기본 루틴 자동 세팅 (최초 1회) ──
   useEffect(() => {
-    if (!loaded || viewingPerson !== "f") return;
+    if (!loaded) return;
     if (localStorage.getItem("base_routine_set")) return;
     const base: Record<string, SlotState> = { ...timetable };
     for (let d = 0; d < 5; d++) {
@@ -390,7 +372,7 @@ function TimetableContent() {
         <header className="sticky top-0 z-20 bg-white/80 backdrop-blur-xl shadow-[0_1px_0_rgba(0,0,0,0.04)]">
           <div className="max-w-[1200px] mx-auto flex items-center justify-between h-16 px-10">
             <div className="flex items-center gap-3">
-              <h2 className="text-[18px] font-bold text-graphite">{isMe ? "내 캘린더" : `${person.name}의 캘린더`}</h2>
+              <h2 className="text-[18px] font-bold text-graphite">내 캘린더</h2>
               <div className="w-px h-5 bg-silver mx-1" />
               <button
                 onClick={() => setWeekOffset((v) => v - 1)}
@@ -415,68 +397,19 @@ function TimetableContent() {
               </button>
             </div>
             <div className="flex items-center gap-2">
-              <div className="relative" ref={dropdownRef}>
-                <button
-                  onClick={() => setTeamDropdownOpen((v) => !v)}
-                  className="h-9 pl-3 pr-8 bg-mist text-graphite text-[13px] font-bold rounded-[8px] hover:bg-silver transition-colors duration-150 flex items-center gap-2.5 relative"
-                >
-                  <div
-                    className="w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold text-white shrink-0"
-                    style={{ backgroundColor: person.color }}
-                  >
-                    {person.avatar}
-                  </div>
-                  <span>{person.name}</span>
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate">
-                    <path d="M4 5.5l3 3 3-3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </button>
-                {teamDropdownOpen && (
-                  <div className="absolute right-0 top-[calc(100%+6px)] w-[220px] bg-white rounded-[12px] shadow-modal border border-silver/60 py-1.5 z-30">
-                    <p className="px-4 py-2 text-[11px] font-bold text-slate uppercase tracking-wider">팀 캘린더 보기</p>
-                    {PEOPLE.map((p) => (
-                      <button
-                        key={p.id}
-                        onClick={() => { setViewingPerson(p.id); setTeamDropdownOpen(false); }}
-                        className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors duration-100 ${
-                          viewingPerson === p.id ? "bg-mist" : "hover:bg-paper"
-                        }`}
-                      >
-                        <div
-                          className="w-7 h-7 rounded-full flex items-center justify-center text-[12px] font-bold text-white shrink-0"
-                          style={{ backgroundColor: p.color }}
-                        >
-                          {p.avatar}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <span className="text-[13px] font-semibold text-graphite block">{p.name}</span>
-                          <span className="text-[11px] text-slate">{p.role}</span>
-                        </div>
-                        {viewingPerson === p.id && (
-                          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="text-ink shrink-0">
-                            <path d="M3 7.5l3 3 5-6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-              {isMe && (
-                <button
-                  onClick={() => setShowAddModal(true)}
-                  className="inline-flex items-center h-9 px-4 bg-mist text-graphite text-[13px] font-bold rounded-[8px] hover:bg-silver transition-colors duration-150"
-                >
-                  + 일정 등록
-                </button>
-              )}
+              <button
+                onClick={() => setShowAddModal(true)}
+                className="inline-flex items-center h-9 px-4 bg-mist text-graphite text-[13px] font-bold rounded-[8px] hover:bg-silver transition-colors duration-150"
+              >
+                + 일정 등록
+              </button>
             </div>
           </div>
         </header>
 
         <div className="max-w-[1200px] mx-auto px-10 py-10">
-          {/* 액션 버튼 (내 캘린더일 때만) */}
-          {isMe && !editMode && (
+          {/* 액션 버튼 */}
+          {!editMode && (
             <div className="flex items-center gap-2 mb-6">
               <button
                 onClick={() => setEditMode("unavailable")}
@@ -579,10 +512,10 @@ function TimetableContent() {
                           <div
                             key={key}
                             className={`h-[44px] border-t border-l border-silver transition-colors duration-100 flex flex-col items-center justify-center ${STATE_COLORS[state]} ${
-                              isOpposite ? "opacity-30 cursor-not-allowed" : editMode ? "cursor-pointer" : isMe ? "cursor-pointer" : "cursor-default"
+                              isOpposite ? "opacity-30 cursor-not-allowed" : "cursor-pointer"
                             }`}
-                            onPointerDown={() => isMe && isEditable && handlePointerDown(key)}
-                            onPointerEnter={() => isMe && isEditable && handlePointerEnter(key)}
+                            onPointerDown={() => isEditable && handlePointerDown(key)}
+                            onPointerEnter={() => isEditable && handlePointerEnter(key)}
                           >
                             {state !== "available" && (
                               <span className={`text-[12px] font-medium ${
@@ -609,7 +542,7 @@ function TimetableContent() {
       </main>
 
       {/* ── 2. 외부 캘린더 연동 Diff-View 패널 ── */}
-      <div className={`fixed top-0 right-[300px] h-full w-[300px] bg-white border-l border-silver z-30 flex flex-col shadow-modal transition-transform duration-300 ${showSyncPanel ? "translate-x-0" : "translate-x-full pointer-events-none"}`}>
+      <div className={`fixed top-0 right-0 h-full w-[300px] bg-white border-l border-silver z-30 flex flex-col shadow-modal transition-transform duration-300 ${showSyncPanel ? "translate-x-0" : "translate-x-full pointer-events-none"}`}>
         <div className="px-5 py-4 border-b border-silver flex items-start justify-between">
           <div>
             <h3 className="text-[14px] font-bold text-graphite">외부 캘린더 연동 검수</h3>
@@ -706,7 +639,7 @@ function TimetableContent() {
                 tag,
                 day,
                 hour: h,
-                personId: viewingPerson,
+                personId: "f",
                 createdAt: new Date().toISOString(),
               });
             }

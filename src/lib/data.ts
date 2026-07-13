@@ -4,9 +4,6 @@
 
 export type SlotState = "available" | "unavailable" | "prefer_not";
 export type AttendanceType = "required" | "optional";
-// [설계 의도]: 외부 캘린더 의존성을 끊고 플랫폼 내에서 모든 일정 등록, 회의 생성,
-// 정성 맥락(선호/불가)이 유기적으로 순환하도록 올인원 아키텍처로 내재화한다.
-export type SyncStatus = "migrated" | "active_internal";
 
 export interface ConstraintTag {
   text: string;
@@ -21,7 +18,6 @@ export interface Person {
   avatar: string;
   color: string;
   description: string;
-  syncStatus: SyncStatus;
   tags: ConstraintTag[];
 }
 
@@ -30,17 +26,11 @@ export interface TimeSlot {
   hour: number; // 0~23
 }
 
-export const SYNC_STATUS_CONFIG: Record<SyncStatus, { label: string; color: string; dot: string }> = {
-  active_internal: { label: "Corecalendar 활성화 중", color: "text-[#03b26c]", dot: "bg-[#03b26c]" },
-  migrated: { label: "외부 캘린더 이관 완료 (내부 미세팅)", color: "text-[#fe9800]", dot: "bg-[#fe9800]" },
-};
-
 export const PEOPLE: Person[] = [
   {
     id: "a", name: "김지원", role: "팀장", attendance: "required",
     avatar: "지", color: "#3182F6",
     description: "월 오전 경영진 보고 등 일정 최다. 가장 빡빡한 필수 참석자.",
-    syncStatus: "active_internal",
     tags: [
       { text: "월 오전 불가", type: "critical" },
       { text: "일정 밀도 높음", type: "warning" },
@@ -51,7 +41,6 @@ export const PEOPLE: Person[] = [
     id: "b", name: "이서연", role: "디자이너", attendance: "required",
     avatar: "서", color: "#34C759",
     description: "매일 13-14시 점심 직후 기피. 집중 시간 보호.",
-    syncStatus: "active_internal",
     tags: [
       { text: "점심 직후 기피", type: "warning" },
       { text: "13-14시 조정 고정", type: "warning" },
@@ -62,7 +51,6 @@ export const PEOPLE: Person[] = [
     id: "c", name: "박민준", role: "세일즈 엔지니어", attendance: "required",
     avatar: "민", color: "#FF9F0A",
     description: "화·목 외근. 목요일은 캘린더에 없어 본인이 직접 등록.",
-    syncStatus: "active_internal",
     tags: [
       { text: "화 외근", type: "critical" },
       { text: "목 외근", type: "critical" },
@@ -73,7 +61,6 @@ export const PEOPLE: Person[] = [
     id: "d", name: "최하은", role: "마케터", attendance: "optional",
     avatar: "하", color: "#AF52DE",
     description: "수 오전 워크숍. 금 오후 외부 교육.",
-    syncStatus: "active_internal",
     tags: [
       { text: "수 10-12 워크숍", type: "critical" },
       { text: "금 오후 외부 교육", type: "warning" },
@@ -84,7 +71,6 @@ export const PEOPLE: Person[] = [
     id: "e", name: "정우진", role: "데이터 분석가", attendance: "optional",
     avatar: "우", color: "#FF3B30",
     description: "외부 캘린더 이관만 완료. 내부 선호/불가 미세팅.",
-    syncStatus: "migrated",
     tags: [
       { text: "내부 세팅 미완료", type: "critical" },
       { text: "이관 데이터만 반영", type: "warning" },
@@ -95,7 +81,6 @@ export const PEOPLE: Person[] = [
     id: "f", name: "김나은", role: "디자이너", attendance: "required",
     avatar: "나", color: "#007AFF",
     description: "본인도 참석.",
-    syncStatus: "active_internal",
     tags: [
       { text: "필수 참석", type: "neutral" },
     ],

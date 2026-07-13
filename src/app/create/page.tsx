@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { AppShell, Button } from "@/components/ui";
 import { PEOPLE, type Person } from "@/lib/data";
-import { computeRecommendations, useMeetings, type ComputedSlot, type ConfirmedMeeting } from "@/lib/store";
+import { computeRecommendations, useMeetings, type ComputedSlot, type ConfirmedMeeting, type AttendeeSlotState } from "@/lib/store";
 
 // [설계 의도]: 불필요한 통계적 수치(매칭률)와 텍스트 노이즈를 걷어내고 3열 카드 배치와 전역 레이아웃 고정을 통해,
 // 사용자가 시각적 흔들림 없이 '승인 요청' 액션에만 집중할 수 있도록 UI 밀도를 마감한다.
@@ -16,45 +16,73 @@ import { computeRecommendations, useMeetings, type ComputedSlot, type ConfirmedM
 // [설계 의도]: 조건별 참석자 필터링으로 정보 우선순위를 확립하고, 완료 화면의 요소를 하나의 카드 뷰로 묶어
 // 인지 복잡도를 낮추며, 대시보드의 시간 규격을 TDS 타임 포맷으로 일원화한다.
 
-// ── 추천 카드 ──
-function SlotCard({ slot, onConfirm, rank, selectedPeople }: {
-  slot: ComputedSlot; onConfirm: () => void; rank: number;
-  selectedPeople: Record<string, "required" | "optional">;
-}) {
-  // 필수: 전원 표시 / 선택: 해당 슬롯에서 참석 가능한 사람만 표시
-  const visiblePeople = PEOPLE.filter((p) => {
-    const attendance = selectedPeople[p.id];
-    if (!attendance) return false;
-    if (attendance === "required") return true;
-    return !slot.absentees.includes(p.name);
-  });
+// ── 참석자 상태 아바타 ──
+function AttendeeAvatar({ a, compact = false }: { a: AttendeeSlotState; compact?: boolean }) {
+  const tooltip =
+    a.state === "absent" ? (a.tag ? `불참: ${a.tag}` : "불참") :
+    a.state === "prefer_not" ? "비선호" :
+    !a.verified ? "일정 미확인" : "참석 가능";
+
+  const size = compact ? "w-6 h-6 text-[10px]" : "w-7 h-7 text-[12px]";
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: rank * 0.1, duration: 0.4 }}
-      className="rounded-[16px] p-6 bg-white shadow-card hover:shadow-card-hover transition-all flex flex-col"
-    >
-      <h3 className="text-[17px] font-bold text-graphite tracking-tight">
-        {slot.label.split("·")[0].trim()}
-      </h3>
-      <p className="text-[13px] font-bold text-charcoal mt-1">
-        {slot.label.split("·")[1]?.trim()}
-      </p>
-
-      <div className="flex items-center gap-1.5 mt-4 mb-5">
-        {visiblePeople.map((p) => (
-          <div
-            key={p.id}
-            className="w-7 h-7 rounded-full flex items-center justify-center text-[12px] font-bold text-white shrink-0"
-            style={{ backgroundColor: p.color }}
-            title={`${p.name} (${selectedPeople[p.id] === "required" ? "필수" : "선택"})`}
-          >
-            {p.avatar}
-          </div>
-        ))}
+    <div className="flex flex-col items-center gap-0.5">
+      <div
+        className={`relative ${size} rounded-full flex items-center justify-center font-bold text-white ${a.state === "absent" ? "opacity-40" : ""}`}
+        style={{
+          backgroundColor: a.color,
+          ...(a.state === "prefer_not" ? { outline: "2px solid #fe9800", outlineOffset: "1px" } : {}),
+        }}
+        title={tooltip}
+      >
+        {a.avatar}
+        {!a.verified && a.state !== "absent" && (
+          <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 bg-stone rounded-full border-[1.5px] border-white" />
+        )}
       </div>
+      {!compact && (
+        <span className={`text-[9px] font-semibold leading-none ${
+          a.state === "absent" ? "text-slate" :
+          a.state === "prefer_not" ? "text-warning" :
+          !a.verified ? "text-stone" : "text-transparent select-none"
+        }`}>
+          {a.state === "absent" ? "불참" : a.state === "prefer_not" ? "비선호" : !a.verified ? "미확인" : "·"}
+        </span>
+      )}
+    </div>
+  );
+}
+
+// ── 추천 카드 (1위 Featured) ──
+function SlotCard({ slot, onConfirm }: {
+  slot: ComputedSlot; onConfirm: () => void;
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      className="rounded-[16px] p-6 bg-white shadow-card flex flex-col"
+    >
+      <div className="flex items-start justify-between mb-1">
+        <div>
+          <h3 className="text-[18px] font-bold text-graphite tracking-tight">
+            {slot.label.split("·")[0].trim()}
+          </h3>
+          <p className="text-[14px] font-semibold text-charcoal mt-0.5">
+            {slot.label.split("·")[1]?.trim()}
+          </p>
+        </div>
+        <span className="text-[13px] font-bold text-ink tabular-nums bg-mist px-2.5 py-1 rounded-full shrink-0 ml-3">{slot.matchScore}%</span>
+      </div>
+
+      <div className="flex items-end gap-2.5 mt-5 mb-5">
+        {slot.attendeeStates.map((a) => <AttendeeAvatar key={a.id} a={a} />)}
+      </div>
+
+      {slot.tradeoff && slot.tradeoff !== "전원 참석 가능, 비선호 없음" && (
+        <p className="text-[12px] text-slate mb-4 leading-relaxed">{slot.tradeoff}</p>
+      )}
 
       <div className="mt-auto">
         <Button fullWidth size="md" onClick={onConfirm}>이 시간으로 승인 요청</Button>
@@ -314,6 +342,8 @@ export default function CreateMeetingPage() {
   });
   const [step, setStep] = useState<"input" | "recommend" | "confirmed">("input");
   const [confirmedSlot, setConfirmedSlot] = useState<ComputedSlot | null>(null);
+  const [selectedSlotIdx, setSelectedSlotIdx] = useState(0);
+  const [showHeatmap, setShowHeatmap] = useState(false);
 
   const selectedCount = Object.keys(selectedPeople).length;
   const requiredCount = Object.values(selectedPeople).filter((v) => v === "required").length;
@@ -336,7 +366,9 @@ export default function CreateMeetingPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedPeople, dateStart, dateEnd]);
 
-  const topSlots = recommendations.slice(0, 3);
+  const safeIdx = Math.min(selectedSlotIdx, Math.max(0, recommendations.length - 1));
+  const featuredSlot = recommendations[safeIdx];
+  const otherSlots = recommendations.filter((_, i) => i !== safeIdx).slice(0, 5);
 
   const togglePerson = (id: string) => {
     setSelectedPeople((prev) => {
@@ -511,7 +543,7 @@ export default function CreateMeetingPage() {
                       선택한 참석자들의 일정이 모두 겹쳐 가능한 시간대가 없어요. 필수 참석자를 줄이거나 선택 참석으로 변경해보세요.
                     </p>
                   )}
-                  <Button size="lg" onClick={() => setStep("recommend")} disabled={selectedCount < 2 || recommendations.length === 0}>
+                  <Button size="lg" onClick={() => { setSelectedSlotIdx(0); setStep("recommend"); }} disabled={selectedCount < 2 || recommendations.length === 0}>
                     회의 시간 추천받기
                   </Button>
                 </div>
@@ -521,8 +553,8 @@ export default function CreateMeetingPage() {
             {/* STEP 2 */}
             {step === "recommend" && (
               <motion.div key="recommend" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                {topSlots.length === 0 ? (
-                  /* ── 빈 상태: 가능한 시간대 없음 ── */
+                {!featuredSlot ? (
+                  /* ── 빈 상태 ── */
                   <div className="flex flex-col items-center justify-center py-20 text-center">
                     <div className="w-16 h-16 rounded-[16px] bg-mist flex items-center justify-center mb-5">
                       <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
@@ -531,48 +563,111 @@ export default function CreateMeetingPage() {
                         <path d="M10 17l8 0M14 14v6" stroke="#d1d6db" strokeWidth="1.6" strokeLinecap="round" />
                       </svg>
                     </div>
-                    <h2 className="text-[20px] font-bold text-graphite mb-2">
-                      가능한 시간대를 찾지 못했어요
-                    </h2>
-                    <p className="text-[14px] text-slate mb-1 leading-relaxed">
-                      필수 참석자의 일정이 겹쳐 모두 가능한 시간이 없어요.
-                    </p>
-                    <p className="text-[13px] text-stone mb-8 leading-relaxed">
-                      일부 참석자를 선택 참석으로 바꾸거나<br />날짜 범위를 넓혀보세요.
-                    </p>
-                    <Button size="lg" onClick={() => setStep("input")}>
-                      ← 참석자 수정하기
-                    </Button>
+                    <h2 className="text-[20px] font-bold text-graphite mb-2">가능한 시간대를 찾지 못했어요</h2>
+                    <p className="text-[14px] text-slate mb-1 leading-relaxed">필수 참석자의 일정이 겹쳐 모두 가능한 시간이 없어요.</p>
+                    <p className="text-[13px] text-stone mb-8 leading-relaxed">일부 참석자를 선택 참석으로 바꾸거나<br />날짜 범위를 넓혀보세요.</p>
+                    <Button size="lg" onClick={() => setStep("input")}>← 참석자 수정하기</Button>
                   </div>
                 ) : (
                   /* ── 추천 결과 ── */
                   <>
-                    <div className="text-center mb-10">
-                      <h2 className="text-[24px] font-bold text-graphite tracking-tight">
-                        {topSlots.length === 1
-                          ? "선택한 기간에서 가능한 시간 1개를 찾았어요"
-                          : topSlots.length === 2
-                          ? "선택한 기간에서 최적의 시간 2개를 찾았어요"
-                          : "선택한 기간에서 최적의 시간 3개를 찾았어요"}
+                    <div className="mb-6">
+                      <h2 className="text-[22px] font-bold text-graphite tracking-tight">
+                        최적의 시간을 찾았어요
                       </h2>
-                      <p className="text-[13px] text-stone mt-2">
-                        {topSlots.length < 3
-                          ? "필수 참석자를 조정하면 더 많은 옵션을 찾을 수 있어요"
-                          : "아래 추천 시간 중 선택해보세요!"}
+                      <p className="text-[13px] text-stone mt-1">
+                        {recommendations.length > 1 ? `${recommendations.length}개 후보 중 가장 좋은 시간이에요` : "가능한 시간이 1개예요"}
                       </p>
                     </div>
 
-                    <div className={`grid gap-4 ${
-                      topSlots.length === 1
-                        ? "grid-cols-1 max-w-[360px] mx-auto"
-                        : topSlots.length === 2
-                        ? "grid-cols-2 max-w-[740px] mx-auto"
-                        : "grid-cols-3"
-                    }`}>
-                      {topSlots.map((slot, i) => (
-                        <SlotCard key={`${slot.day}-${slot.hour}`} slot={slot} rank={i}
-                          selectedPeople={selectedPeople} onConfirm={() => handleConfirm(slot)} />
-                      ))}
+                    {/* 1위 Featured 카드 */}
+                    <SlotCard slot={featuredSlot} onConfirm={() => handleConfirm(featuredSlot)} />
+
+                    {/* 다른 시간 보기 */}
+                    {otherSlots.length > 0 && (
+                      <div className="mt-5">
+                        <p className="text-[12px] font-bold text-stone uppercase tracking-wider mb-3">다른 시간 보기</p>
+                        <div className="space-y-2">
+                          {otherSlots.map((slot) => {
+                            const idx = recommendations.indexOf(slot);
+                            return (
+                              <button
+                                key={`${slot.day}-${slot.hour}`}
+                                onClick={() => setSelectedSlotIdx(idx)}
+                                className="w-full bg-white rounded-[12px] shadow-card px-5 py-3.5 flex items-center gap-4 hover:shadow-card-hover transition-all text-left"
+                              >
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-[13px] font-semibold text-graphite">{slot.label.split("·")[0].trim()}</p>
+                                  <p className="text-[12px] text-slate">{slot.label.split("·")[1]?.trim()}</p>
+                                </div>
+                                <div className="flex items-center gap-1.5 shrink-0">
+                                  {slot.attendeeStates.map((a) => <AttendeeAvatar key={a.id} a={a} compact />)}
+                                </div>
+                                <span className="text-[12px] font-bold text-stone tabular-nums shrink-0">{slot.matchScore}%</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* 팀 가용성 히트맵 */}
+                    <div className="mt-5">
+                      <button
+                        onClick={() => setShowHeatmap((v) => !v)}
+                        className="flex items-center gap-1.5 text-[13px] font-semibold text-slate hover:text-graphite transition-colors mb-3"
+                      >
+                        팀 가용성 한눈에 보기
+                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className={`transition-transform duration-200 ${showHeatmap ? "rotate-180" : ""}`}>
+                          <path d="M4 5.5l3 3 3-3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      </button>
+                      {showHeatmap && (
+                        <div className="bg-white rounded-[16px] shadow-card p-5 overflow-x-auto">
+                          {/* 히트맵 헤더 */}
+                          <div className="grid grid-cols-[44px_repeat(5,1fr)] gap-1 mb-1 min-w-[360px]">
+                            <div />
+                            {["월", "화", "수", "목", "금"].map((d) => (
+                              <div key={d} className="text-center text-[11px] font-bold text-stone">{d}</div>
+                            ))}
+                          </div>
+                          {/* 히트맵 셀 */}
+                          <div className="grid grid-cols-[44px_repeat(5,1fr)] gap-1 min-w-[360px]">
+                            {[9,10,11,12,13,14,15,16,17,18].map((hour) => (
+                              <>
+                                <div key={`lbl-${hour}`} className="text-[10px] text-stone text-right pr-2 flex items-center justify-end tabular-nums">{hour}:00</div>
+                                {[0,1,2,3,4].map((day) => {
+                                  const slot = recommendations.find((s) => s.day === day && s.hour === hour);
+                                  const isSelected = slot && recommendations.indexOf(slot) === safeIdx;
+                                  if (!slot) {
+                                    return <div key={day} className="h-7 rounded-[4px] bg-mist" title="필수 참석자 불가" />;
+                                  }
+                                  const ratio = slot.totalAttendees / slot.maxAttendees;
+                                  const bg = ratio === 1 ? "bg-[#3182F6]" : ratio >= 0.7 ? "bg-[#3182F6]/55" : "bg-[#3182F6]/25";
+                                  return (
+                                    <button
+                                      key={day}
+                                      onClick={() => setSelectedSlotIdx(recommendations.indexOf(slot))}
+                                      title={`${slot.totalAttendees}/${slot.maxAttendees}명 가능${slot.preferNotCount > 0 ? ` · 비선호 ${slot.preferNotCount}명` : ""}`}
+                                      className={`relative h-7 rounded-[4px] ${bg} transition-all hover:opacity-80 ${isSelected ? "ring-2 ring-[#3182F6] ring-offset-1" : ""}`}
+                                    >
+                                      {slot.preferNotCount > 0 && (
+                                        <span className="absolute top-0.5 right-0.5 w-1.5 h-1.5 rounded-full bg-warning" />
+                                      )}
+                                    </button>
+                                  );
+                                })}
+                              </>
+                            ))}
+                          </div>
+                          <div className="flex items-center gap-4 mt-4 pt-3 border-t border-mist">
+                            <div className="flex items-center gap-1.5 text-[11px] text-slate"><span className="w-3 h-3 rounded-sm bg-[#3182F6]" />전원 참석</div>
+                            <div className="flex items-center gap-1.5 text-[11px] text-slate"><span className="w-3 h-3 rounded-sm bg-[#3182F6]/55" />일부 참석</div>
+                            <div className="flex items-center gap-1.5 text-[11px] text-slate"><span className="w-3 h-3 rounded-sm bg-mist border border-silver" />불가</div>
+                            <div className="flex items-center gap-1.5 text-[11px] text-slate"><span className="w-1.5 h-1.5 rounded-full bg-warning" />비선호</div>
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     <button onClick={() => setStep("input")}

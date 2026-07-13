@@ -6,7 +6,7 @@
 // 확정된 회의는 참석자 시간표에 즉시 피드백 루프를 형성한다.
 
 import { useState, useEffect, useCallback } from "react";
-import { type SlotState, type AttendanceType, getPersonTimetable, HOURS, isBusinessHour } from "./data";
+import { type SlotState, type AttendanceType, getPersonTimetable, HOURS, isBusinessHour, PEOPLE } from "./data";
 
 // ── localStorage helpers ──
 function load<T>(key: string, fallback: T): T {
@@ -184,6 +184,16 @@ export function useMeetings() {
 }
 
 // ── 추천 로직 (실시간 계산) ──
+export interface AttendeeSlotState {
+  id: string;
+  name: string;
+  avatar: string;
+  color: string;
+  attendance: AttendanceType;
+  state: "available" | "prefer_not" | "absent";
+  tag?: string; // critical 태그 (불참 사유, 일정 제목 아님)
+}
+
 export interface ComputedSlot {
   day: number;
   hour: number;
@@ -196,6 +206,7 @@ export interface ComputedSlot {
   matchScore: number;
   absentees: string[];
   preferNotNames: string[];
+  attendeeStates: AttendeeSlotState[];
 }
 
 const DAY_LABELS = ["월", "화", "수", "목", "금"];
@@ -279,12 +290,26 @@ export function computeRecommendations(
       const dateNum = 14 + day;
       const label = `7/${dateNum} ${DAY_LABELS[day]}요일 · ${hour.toString().padStart(2, "0")}:00 – ${(hour + 1).toString().padStart(2, "0")}:00`;
 
+      const attendeeStates: AttendeeSlotState[] = selectedPeople.map((p) => {
+        const rawState = timetables[p.id]?.[slotKey] || "available";
+        const pd = PEOPLE.find((pp) => pp.id === p.id)!;
+        const state: AttendeeSlotState["state"] =
+          rawState === "unavailable" ? "absent" : rawState as "available" | "prefer_not";
+        return {
+          id: p.id, name: p.name,
+          avatar: pd.avatar, color: pd.color,
+          attendance: p.attendance, state,
+          tag: state === "absent" ? pd.tags.find((t) => t.type === "critical")?.text : undefined,
+        };
+      });
+
       slots.push({
         day, hour, label,
         requiredAllAvailable, preferNotCount,
         totalAttendees, maxAttendees,
         tradeoff, matchScore,
         absentees, preferNotNames,
+        attendeeStates,
       });
     }
   }

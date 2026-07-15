@@ -347,6 +347,7 @@ function TimetableContent() {
   const [syncChoice, setSyncChoice] = useState<"keep" | "overwrite" | null>(null);
   const [syncDone, setSyncDone] = useState(false);
   const [syncLoading, setSyncLoading] = useState(false);
+  const [showEditHint, setShowEditHint] = useState(false);
   const gridRef = useRef<HTMLDivElement>(null);
 
   const weekInfo = getWeekInfo(weekOffset);
@@ -428,7 +429,12 @@ function TimetableContent() {
 
   const handleSave = () => {
     setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+    setTimeout(() => setSaved(false), 3000);
+  };
+
+  const handleBlockHint = () => {
+    setShowEditHint(true);
+    setTimeout(() => setShowEditHint(false), 2500);
   };
 
   const handleDeleteBlock = useCallback((groupId: string) => {
@@ -502,41 +508,46 @@ function TimetableContent() {
         <div className="max-w-[1200px] mx-auto px-10 py-10">
           {/* 액션 버튼 */}
           {!editMode && (
-            <div className="flex items-center gap-2 mb-6">
-              <button
-                onClick={() => setEditMode("unavailable")}
-                className="h-10 px-5 text-[13px] font-bold rounded-[8px] transition-colors duration-150"
-                style={{
-                  backgroundColor: "lab(56.1306% 66.3818 33.2557 / .1)",
-                  color: "#f04452",
-                }}
-              >
-                불가능한 시간 선택하기
-              </button>
-              <button
-                onClick={() => setEditMode("prefer_not")}
-                className="h-10 px-5 text-[13px] font-bold rounded-[8px] transition-colors duration-150"
-                style={{
-                  backgroundColor: "lab(72.6018% 33.5338 77.3213 / .12)",
-                  color: "#fe9800",
-                }}
-              >
-                비선호 시간 선택하기
-              </button>
-              <button
-                onClick={() => {
-                  if (showSyncPanel || syncLoading) return;
-                  setSyncLoading(true);
-                  setTimeout(() => { setSyncLoading(false); setShowSyncPanel(true); }, 1400);
-                }}
-                disabled={syncLoading}
-                className="h-10 px-5 bg-silver text-graphite text-[13px] font-bold rounded-[8px] hover:bg-stone/30 transition-colors duration-150 ml-auto flex items-center gap-2 disabled:opacity-60"
-              >
-                {syncLoading && (
-                  <span className="w-3.5 h-3.5 border-2 border-graphite/30 border-t-graphite rounded-full animate-spin shrink-0" />
-                )}
-                {syncLoading ? "연동 중..." : "외부 캘린더 연동하기"}
-              </button>
+            <div className="mb-6">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setEditMode("unavailable")}
+                  className="h-10 px-5 text-[13px] font-bold rounded-[8px] transition-colors duration-150"
+                  style={{
+                    backgroundColor: "lab(56.1306% 66.3818 33.2557 / .1)",
+                    color: "#f04452",
+                  }}
+                >
+                  회의 불가 시간 표시
+                </button>
+                <button
+                  onClick={() => setEditMode("prefer_not")}
+                  className="h-10 px-5 text-[13px] font-bold rounded-[8px] transition-colors duration-150"
+                  style={{
+                    backgroundColor: "lab(72.6018% 33.5338 77.3213 / .12)",
+                    color: "#fe9800",
+                  }}
+                >
+                  회의 비선호 시간 표시
+                </button>
+                <button
+                  onClick={() => {
+                    if (showSyncPanel || syncLoading) return;
+                    setSyncLoading(true);
+                    setTimeout(() => { setSyncLoading(false); setShowSyncPanel(true); }, 1400);
+                  }}
+                  disabled={syncLoading}
+                  className="h-10 px-5 bg-silver text-graphite text-[13px] font-bold rounded-[8px] hover:bg-stone/30 transition-colors duration-150 ml-auto flex items-center gap-2 disabled:opacity-60"
+                >
+                  {syncLoading && (
+                    <span className="w-3.5 h-3.5 border-2 border-graphite/30 border-t-graphite rounded-full animate-spin shrink-0" />
+                  )}
+                  {syncLoading ? "연동 중..." : "외부 캘린더 연동하기"}
+                </button>
+              </div>
+              <p className="text-[11px] text-stone mt-2">
+                외근·회의 등 실제 일정 등록은 우측 상단 <span className="font-semibold text-slate">+ 일정 등록</span>을 이용하세요
+              </p>
             </div>
           )}
 
@@ -583,7 +594,15 @@ function TimetableContent() {
                 ))}
               </div>
 
-              <div className="relative">
+              <div
+                className="relative"
+                onPointerMove={(e) => {
+                  if (!isPainting || !editMode) return;
+                  const el = document.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null;
+                  const cellKey = el?.dataset?.cellkey;
+                  if (cellKey) paint(cellKey);
+                }}
+              >
                 {/* 베이스 그리드 (배경색 + 드래그 이벤트) */}
                 <div className="grid grid-cols-[56px_repeat(5,1fr)] gap-y-[3px] gap-x-[4px]">
                   {HOURS.map((hour) => (
@@ -601,6 +620,7 @@ function TimetableContent() {
                         return (
                           <div
                             key={key}
+                            data-cellkey={key}
                             className={`h-[44px] rounded-[6px] transition-colors duration-100 ${STATE_COLORS[state]} ${
                               isOpposite ? "opacity-30 cursor-not-allowed" : slotData[key] ? "cursor-default" : "cursor-pointer"
                             }`}
@@ -648,22 +668,40 @@ function TimetableContent() {
                                 }}
                               >
                                 <div className="absolute left-0 top-0 bottom-0 w-[3px]" style={{ backgroundColor: barColor }} />
-                                <div className="absolute inset-y-0 left-[7px] right-0 flex items-center pr-2">
-                                  <span className="text-[11px] font-semibold text-graphite truncate">{label}</span>
+                                <div className="absolute inset-0 left-[7px] flex flex-col justify-center gap-0.5 pr-2 overflow-hidden">
+                                  <span
+                                    className="inline-flex w-fit items-center px-1.5 py-0.5 rounded-[4px] text-[10px] font-bold shrink-0 leading-none"
+                                    style={{ backgroundColor: `${barColor}22`, color: barColor }}
+                                  >
+                                    {block.tag}
+                                  </span>
+                                  {block.span > 1 && block.title && (
+                                    <span className="text-[11px] font-semibold text-graphite truncate leading-tight">{block.title}</span>
+                                  )}
                                 </div>
                               </div>
                             );
                           }
                           if (block.type === "unavailable") {
                             return (
-                              <div key={`u-${block.startHour}`} className="absolute inset-x-0 bg-[#fff0f1] rounded-[6px] flex items-center justify-center" style={{ top, height }}>
+                              <div
+                                key={`u-${block.startHour}`}
+                                className={`absolute inset-x-0 bg-[#fff0f1] rounded-[6px] flex items-center justify-center ${editMode ? "pointer-events-none" : "pointer-events-auto cursor-pointer"}`}
+                                style={{ top, height }}
+                                onClick={!editMode ? handleBlockHint : undefined}
+                              >
                                 <span className="text-[12px] font-semibold text-[#f04452]">불가</span>
                               </div>
                             );
                           }
                           if (block.type === "prefer_not") {
                             return (
-                              <div key={`p-${block.startHour}`} className="absolute inset-x-0 bg-[#fff5eb] rounded-[6px] flex items-center justify-center" style={{ top, height }}>
+                              <div
+                                key={`p-${block.startHour}`}
+                                className={`absolute inset-x-0 bg-[#fff5eb] rounded-[6px] flex items-center justify-center ${editMode ? "pointer-events-none" : "pointer-events-auto cursor-pointer"}`}
+                                style={{ top, height }}
+                                onClick={!editMode ? handleBlockHint : undefined}
+                              >
                                 <span className="text-[12px] font-semibold text-[#ff9800]">비선호</span>
                               </div>
                             );
@@ -703,7 +741,7 @@ function TimetableContent() {
               className={`w-full px-4 py-4 text-left border-b border-silver transition-colors duration-150 ${syncChoice === "keep" ? "bg-ink/6" : "hover:bg-mist"}`}
             >
               <div className="flex items-center justify-between mb-1">
-                <span className="text-[11px] font-bold text-slate uppercase tracking-wider">내 일정 유지</span>
+                <span className="text-[11px] font-bold text-slate uppercase tracking-wider">Corecalendar 일정 유지</span>
                 {syncChoice === "keep" && (
                   <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7.5l3 3 5-6" stroke="#101010" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
                 )}
@@ -716,7 +754,7 @@ function TimetableContent() {
               className={`w-full px-4 py-4 text-left transition-colors duration-150 ${syncChoice === "overwrite" ? "bg-ink/6" : "hover:bg-mist"}`}
             >
               <div className="flex items-center justify-between mb-1">
-                <span className="text-[11px] font-bold text-slate uppercase tracking-wider">외부 일정 덮어쓰기</span>
+                <span className="text-[11px] font-bold text-slate uppercase tracking-wider">Google Calendar로 교체</span>
                 {syncChoice === "overwrite" && (
                   <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7.5l3 3 5-6" stroke="#101010" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
                 )}
@@ -757,6 +795,16 @@ function TimetableContent() {
             <path d="M5.5 8l1.8 1.8L10.5 6.5" stroke="#03b26c" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
           저장되었습니다
+        </div>
+      )}
+
+      {/* 블록 편집 힌트 토스트 */}
+      {showEditHint && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-5 py-3 bg-graphite text-white text-[13px] font-semibold rounded-[12px] shadow-modal pointer-events-none">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M11 2.5l2.5 2.5-8 8L3 13l.5-2.5 7.5-8z" stroke="white" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          수정하려면 상단 편집 버튼을 눌러주세요
         </div>
       )}
 

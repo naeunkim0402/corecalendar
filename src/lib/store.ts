@@ -169,6 +169,20 @@ export function useMeetings() {
 
   const deleteMeeting = useCallback((id: string) => {
     setMeetings((prev) => {
+      const meeting = prev.find((m) => m.id === id);
+      // approved 회의 삭제 시 참석자 시간표 복원
+      if (meeting?.status === "approved") {
+        meeting.attendees.forEach((a) => {
+          const tKey = `timetable_${a.id}`;
+          const saved = load<Record<string, SlotState> | null>(tKey, null);
+          const table = saved ?? getPersonTimetable(a.id);
+          const slotKey = `${meeting.day}-${meeting.hour}`;
+          if (table[slotKey] === "unavailable") {
+            table[slotKey] = "available";
+            save(tKey, table);
+          }
+        });
+      }
       const next = prev.filter((m) => m.id !== id);
       save("meetings", next);
       return next;

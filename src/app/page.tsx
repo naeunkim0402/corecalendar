@@ -100,20 +100,28 @@ function OnboardingModal({ onComplete }: { onComplete: () => void }) {
             <span className="text-[13px] font-semibold text-success">연동 완료!</span>
           </div>
         ) : (
-          <button
-            onClick={handleSync}
-            disabled={syncing}
-            className="w-full h-12 bg-ink text-white text-[14px] font-bold rounded-[8px] active:bg-black transition-colors duration-150 disabled:opacity-40 flex items-center justify-center gap-2"
-          >
-            {syncing ? (
-              <>
-                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                연동 중...
-              </>
-            ) : (
-              "외부 캘린더 연동하기"
-            )}
-          </button>
+          <>
+            <button
+              onClick={handleSync}
+              disabled={syncing}
+              className="w-full h-12 bg-ink text-white text-[14px] font-bold rounded-[8px] active:bg-black transition-colors duration-150 disabled:opacity-40 flex items-center justify-center gap-2"
+            >
+              {syncing ? (
+                <>
+                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  연동 중...
+                </>
+              ) : (
+                "외부 캘린더 연동하기"
+              )}
+            </button>
+            <button
+              onClick={onComplete}
+              className="w-full mt-3 text-[13px] text-stone hover:text-slate transition-colors duration-150 py-1"
+            >
+              나중에 하기
+            </button>
+          </>
         )}
       </div>
     </div>
@@ -197,7 +205,7 @@ export default function Home() {
         </header>
 
         <div className="max-w-[1200px] mx-auto px-10 py-10">
-          {/* 오늘 일정 */}
+          {/* 오늘 일정 — 2열 */}
           <section className="mb-14">
             <div className="flex items-center justify-between mb-5 px-1">
               <div>
@@ -206,128 +214,134 @@ export default function Home() {
               </div>
             </div>
 
-            {todayMeetings.length > 0 ? (
-              <>
+            <div className="grid grid-cols-2 gap-5">
+              {/* 왼쪽: 회의 블록 */}
+              <div>
+                <div className="flex items-center gap-2 mb-3 px-1">
+                  <h4 className="text-[13px] font-bold text-slate">회의</h4>
+                  {todayMeetings.length > 0 && (
+                    <span className="text-[12px] text-stone tabular-nums">{todayMeetings.length}건</span>
+                  )}
+                </div>
+                {todayMeetings.length > 0 ? (
+                  <div className="bg-white rounded-[16px] shadow-card divide-y divide-mist">
+                    {todayMeetings.map((m) => {
+                      const statusStyle = m.status === "pending"
+                        ? "bg-warning/15 text-warning"
+                        : "bg-success/15 text-success";
+                      const statusLabel = m.status === "pending" ? "대기" : "확정";
+                      return (
+                        <div key={m.id} className="px-5 py-4">
+                          <div className="flex items-center justify-between gap-3 mb-2">
+                            <p className="text-[14px] font-semibold text-graphite truncate">{m.title}</p>
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold shrink-0 ${statusStyle}`}>
+                              {statusLabel}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-[12px] text-slate tabular-nums">
+                              {m.hour.toString().padStart(2, "0")}:00 – {(m.hour + 1).toString().padStart(2, "0")}:00
+                            </span>
+                            <div className="flex -space-x-1.5">
+                              {m.attendees.slice(0, 4).map((a) => {
+                                const person = PEOPLE.find((p) => p.id === a.id);
+                                return (
+                                  <div
+                                    key={a.id}
+                                    className="w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold text-white ring-2 ring-white"
+                                    style={{ backgroundColor: person?.color || "#999" }}
+                                    title={a.name}
+                                  >
+                                    {person?.avatar}
+                                  </div>
+                                );
+                              })}
+                              {m.attendees.length > 4 && (
+                                <div className="w-6 h-6 rounded-full bg-mist flex items-center justify-center text-[11px] font-semibold text-slate ring-2 ring-white">
+                                  +{m.attendees.length - 4}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="bg-white rounded-[16px] shadow-card flex flex-col items-center justify-center py-12">
+                    <div className="w-10 h-10 rounded-[10px] bg-mist flex items-center justify-center mb-3">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                        <rect x="3" y="4" width="18" height="18" rx="3" stroke="#d1d6db" strokeWidth="1.6" />
+                        <path d="M3 10h18M8 2v4M16 2v4" stroke="#d1d6db" strokeWidth="1.6" strokeLinecap="round" />
+                      </svg>
+                    </div>
+                    <p className="text-[13px] font-bold text-stone">오늘 회의 없어요</p>
+                  </div>
+                )}
+              </div>
+
+              {/* 오른쪽: 스케줄 블록 */}
+              <div>
+                <div className="flex items-center gap-2 mb-3 px-1">
+                  <h4 className="text-[13px] font-bold text-slate">스케줄</h4>
+                </div>
+                {todayTimeline.length > 0 ? (
+                  <div className="bg-white rounded-[16px] shadow-card divide-y divide-mist">
+                    {todayTimeline.map((item, idx) => (
+                      <div key={idx} className="flex items-center gap-3 px-5 py-4">
+                        <span className="text-[12px] font-semibold text-slate tabular-nums w-[100px] shrink-0">
+                          {String(item.startHour).padStart(2, "0")}:00 – {String(item.endHour).padStart(2, "0")}:00
+                        </span>
+                        <span className="flex-1 text-[14px] font-semibold text-graphite truncate">{item.title}</span>
+                        {item.type === "meeting" ? (
+                          <span className="px-2.5 py-1 rounded-full bg-[#3182f6]/10 text-[#3182f6] text-[11px] font-bold shrink-0">회의</span>
+                        ) : item.tag ? (
+                          <span className="px-2.5 py-1 rounded-full bg-mist text-slate text-[11px] font-bold shrink-0">{item.tag}</span>
+                        ) : null}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="bg-white rounded-[16px] shadow-card flex flex-col items-center justify-center py-12">
+                    <div className="w-10 h-10 rounded-[10px] bg-mist flex items-center justify-center mb-3">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                        <rect x="3" y="4" width="18" height="18" rx="3" stroke="#d1d6db" strokeWidth="1.6" />
+                        <path d="M3 10h18M8 2v4M16 2v4" stroke="#d1d6db" strokeWidth="1.6" strokeLinecap="round" />
+                      </svg>
+                    </div>
+                    <p className="text-[13px] font-bold text-stone">오늘은 비어 있어요</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </section>
+
+          {/* 예정 회의 */}
+          {loaded && (
+            <section className="mb-14">
+              <div className="flex items-center justify-between mb-5 px-1">
+                <h3 className="text-[17px] font-bold text-graphite">예정 회의</h3>
+                {meetings.filter((m) => m.status !== "rejected").length > 0 && (
+                  <button onClick={() => setDeleteTarget("all")} className="text-[13px] text-stone hover:text-error transition-colors duration-150 px-3 py-1.5 rounded-[8px] hover:bg-error/5">
+                    전체 삭제
+                  </button>
+                )}
+              </div>
+
+              {meetings.filter((m) => m.status !== "rejected").length > 0 ? (
+                <>
+                {/* 테이블 헤더 */}
                 <div className="bg-white rounded-t-[16px] shadow-card px-7 py-3.5 flex items-center gap-5">
                   <span className="w-[140px] text-[12px] font-bold text-stone">날짜/시간</span>
                   <span className="flex-1 text-[12px] font-bold text-stone">회의명</span>
                   <span className="w-16 text-[12px] font-bold text-stone text-center">상태</span>
                   <span className="w-[100px] text-[12px] font-bold text-stone text-right">참석자</span>
+                  <span className="w-8" />
                 </div>
+
+                {/* 테이블 행 */}
                 <div className="bg-white rounded-b-[16px] shadow-card -mt-px divide-y divide-mist">
-                  {todayMeetings.map((m) => {
-                    const statusStyle = m.status === "pending"
-                      ? "bg-warning/15 text-warning"
-                      : "bg-success/15 text-success";
-                    const statusLabel = m.status === "pending" ? "대기" : "확정";
-
-                    return (
-                      <div key={m.id} className="flex items-center gap-5 px-7 py-5 transition-colors duration-150">
-                        <div className="w-[140px] shrink-0">
-                          <span className="text-[14px] font-semibold text-graphite tabular-nums block">{today.month}/{today.date} {today.dayLabel}요일</span>
-                          <span className="text-[12px] text-slate tabular-nums">{m.hour.toString().padStart(2, "0")}:00 – {(m.hour + 1).toString().padStart(2, "0")}:00</span>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-[14px] font-semibold text-graphite truncate">{m.title}</p>
-                          <p className="text-[12px] text-slate mt-0.5 tabular-nums">{m.attendees.length}명 참석</p>
-                        </div>
-                        <div className="w-16 flex justify-center">
-                          <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[12px] font-bold ${statusStyle}`}>
-                            {statusLabel}
-                          </span>
-                        </div>
-                        <div className="w-[100px] flex justify-end">
-                          <div className="flex -space-x-1.5">
-                            {m.attendees.slice(0, 4).map((a) => {
-                              const person = PEOPLE.find((p) => p.id === a.id);
-                              return (
-                                <div
-                                  key={a.id}
-                                  className="w-7 h-7 rounded-full flex items-center justify-center text-[12px] font-bold text-white ring-2 ring-white"
-                                  style={{ backgroundColor: person?.color || "#999" }}
-                                  title={a.name}
-                                >
-                                  {person?.avatar}
-                                </div>
-                              );
-                            })}
-                            {m.attendees.length > 4 && (
-                              <div className="w-7 h-7 rounded-full bg-mist flex items-center justify-center text-[12px] font-semibold text-slate ring-2 ring-white">
-                                +{m.attendees.length - 4}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </>
-            ) : (
-              <div className="bg-white rounded-[16px] shadow-card flex flex-col items-center justify-center py-16">
-                <div className="w-12 h-12 rounded-[12px] bg-mist flex items-center justify-center mb-4">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                    <rect x="3" y="4" width="18" height="18" rx="3" stroke="#d1d6db" strokeWidth="1.6" />
-                    <path d="M3 10h18M8 2v4M16 2v4" stroke="#d1d6db" strokeWidth="1.6" strokeLinecap="round" />
-                  </svg>
-                </div>
-                <p className="text-[14px] font-bold text-stone">오늘 잡힌 회의 일정이 없어요</p>
-              </div>
-            )}
-          </section>
-
-          {/* 오늘 스케줄 */}
-          <section className="mb-14">
-            <div className="mb-5 px-1">
-              <h3 className="text-[17px] font-bold text-graphite">오늘 스케줄</h3>
-              <p className="text-[13px] text-stone mt-0.5">7/14 월요일 · 내 일정</p>
-            </div>
-            {todayTimeline.length > 0 ? (
-              <div className="bg-white rounded-[16px] shadow-card divide-y divide-mist">
-                {todayTimeline.map((item, idx) => (
-                  <div key={idx} className="flex items-center gap-4 px-6 py-4">
-                    <span className={`w-2 h-2 rounded-full shrink-0 ${item.type === "meeting" ? "bg-[#3182f6]" : "bg-[#94a3b8]"}`} />
-                    <span className="text-[12px] font-semibold text-slate tabular-nums w-[120px] shrink-0">
-                      {String(item.startHour).padStart(2, "0")}:00 – {String(item.endHour).padStart(2, "0")}:00
-                    </span>
-                    <span className="flex-1 text-[14px] font-semibold text-graphite truncate">{item.title}</span>
-                    {item.type === "meeting" ? (
-                      <span className="px-2.5 py-1 rounded-full bg-[#3182f6]/10 text-[#3182f6] text-[11px] font-bold shrink-0">회의</span>
-                    ) : item.tag ? (
-                      <span className="px-2.5 py-1 rounded-full bg-mist text-slate text-[11px] font-bold shrink-0">{item.tag}</span>
-                    ) : null}
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="bg-white rounded-[16px] shadow-card flex items-center justify-center py-10">
-                <p className="text-[14px] text-stone">오늘은 비어 있어요</p>
-              </div>
-            )}
-          </section>
-
-          {/* 예정 회의 */}
-          {loaded && meetings.filter((m) => m.status !== "rejected").length > 0 && (
-            <section className="mb-14">
-              <div className="flex items-center justify-between mb-5 px-1">
-                <h3 className="text-[17px] font-bold text-graphite">예정 회의</h3>
-                <button onClick={() => setDeleteTarget("all")} className="text-[13px] text-stone hover:text-error transition-colors duration-150 px-3 py-1.5 rounded-[8px] hover:bg-error/5">
-                  전체 삭제
-                </button>
-              </div>
-
-              {/* 테이블 헤더 */}
-              <div className="bg-white rounded-t-[16px] shadow-card px-7 py-3.5 flex items-center gap-5">
-                <span className="w-[140px] text-[12px] font-bold text-stone">날짜/시간</span>
-                <span className="flex-1 text-[12px] font-bold text-stone">회의명</span>
-                <span className="w-16 text-[12px] font-bold text-stone text-center">상태</span>
-                <span className="w-[100px] text-[12px] font-bold text-stone text-right">참석자</span>
-                <span className="w-8" />
-              </div>
-
-              {/* 테이블 행 */}
-              <div className="bg-white rounded-b-[16px] shadow-card -mt-px divide-y divide-mist">
-                {meetings.filter((m) => m.status !== "rejected").map((m) => {
+                  {meetings.filter((m) => m.status !== "rejected").map((m) => {
                   const status = m.status || "approved";
                   const statusStyle = status === "pending"
                     ? "bg-warning/15 text-warning"
@@ -394,8 +408,20 @@ export default function Home() {
                       </button>
                     </div>
                   );
-                })}
-              </div>
+                  })}
+                </div>
+                </>
+              ) : (
+                <div className="bg-white rounded-[16px] shadow-card flex flex-col items-center justify-center py-16">
+                  <div className="w-12 h-12 rounded-[12px] bg-mist flex items-center justify-center mb-4">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                      <rect x="3" y="4" width="18" height="18" rx="3" stroke="#d1d6db" strokeWidth="1.6" />
+                      <path d="M3 10h18M8 2v4M16 2v4" stroke="#d1d6db" strokeWidth="1.6" strokeLinecap="round" />
+                    </svg>
+                  </div>
+                  <p className="text-[14px] font-bold text-stone">예정된 회의가 없어요</p>
+                </div>
+              )}
             </section>
           )}
 
